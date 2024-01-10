@@ -75,11 +75,12 @@ def submit_answer():
     time_taken = end_time - start_time
     score = utils.calculate_score(time_taken, video_path)
     session['latest_score'] = score
-    return redirect(url_for('score', score=score))
+    return redirect(url_for('score'))
 
 # Route for the score page
-@app.route('/score/<score>')
-def score(score):
+@app.route('/score')
+def score():
+    score = session.get('latest_score', 0)  # Default to 0 if not found in session
     daily_scores = HighScore.query.order_by(HighScore.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     correct_answer = utils.get_answer(quiz_path)
