@@ -145,11 +145,14 @@
             var errorMessage = document.getElementById("errorMessage");
 
             if (userAnswer === correctAnswer) {
-                // ... [rest of the correct answer code remains unchanged] ...
+                document.getElementById("answerForm").answer.value = userAnswer;
+                document.getElementById("challengeVideo").pause();
+                document.getElementById("answerForm").submit(); // This line submits the form
             } else {
                 document.getElementById("answerInput").value = '';
-                errorMessage.innerText = "Wrong. Please try again"; // Update the text of the error message
+                errorMessage.innerText = "Wrong. Please try again";
                 errorMessage.style.display = "block"; // Show the error message
+                // Do not submit the form here
             }
         }
     </script>
