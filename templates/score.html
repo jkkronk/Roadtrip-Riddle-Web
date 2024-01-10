@@ -74,7 +74,27 @@
         }
         .social-share a {
             margin-top: 10px;
-            display: block; /* Makes each link appear on a new line */
+            display: inline-block;
+            margin-right: 10px; /* Adjust right margin for spacing */
+            width: auto; /* Adjust width */
+        }
+        .share-button-style {
+            width: auto; /* Change from 100% to auto */
+            background-color: #007bff;
+            color: white;
+            padding: 10px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-family: 'Arial', sans-serif;
+            display: inline-block; /* To ensure link behaves like a button */
+            text-decoration: none; /* Remove underline from link */
+            margin: 10px 0; /* Consistent margin */
+            font-weight: bold;
+        }
+        .share-button-style:hover {
+            background-color: #0056b3;
         }
         .button-style {
             width: 100%;
@@ -100,7 +120,7 @@
 <body>
     <div class="score-container">
         <p class="headline">We are going to... </p>
-        <div class="score">{{ correct_answer }}</div>
+        <div class="score">🏁 {{ correct_answer }} 🏁</div>
 
         <p class="headline">Your Score</p>
         <div class="score">{{ score }}</div>
@@ -108,11 +128,11 @@
         <!-- Social Share Buttons -->
         <div class="social-share">
             <!-- Twitter -->
-            <a href="https://twitter.com/intent/tweet?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="button-style">
+            <a href="https://twitter.com/intent/tweet?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="share-button-style">
                 <i class="fab fa-twitter"></i> <!-- Home icon -->
             </a>
             <!-- WhatsApp -->
-            <a href="https://wa.me/?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="button-style">
+            <a href="https://wa.me/?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="share-button-style">
                 <i class="fab fa-whatsapp"></i> <!-- Home icon -->
             </a>
         </div>
@@ -120,7 +140,7 @@
 
         <!-- Daily High Scores Section -->
         <div class="daily-high-scores">
-            <p class="text">High Score Today</p>
+            <p class="text">🏆 High Score Today 🏆</p>
             <table>
                 <tr>
                     <th>User</th>

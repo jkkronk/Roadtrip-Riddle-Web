@@ -68,25 +68,7 @@
 <body>
     <div class="high-scores-container">
         <div class="scores-section">
-            <p class="headline">High Score - All-Time</p>
-            <table>
-                <tr>
-                    <th>User</th>
-                    <th>Score</th>
-                </tr>
-                {% for score in all_time_high_scores %}
-                {% if score.total_score is not none and score.total_score >= 0 %}
-                <tr>
-                    <td>{{ score.user_name }}</td>
-                    <td>{{ score.total_score }}</td>
-                </tr>
-                {% endif %}
-                {% endfor %}
-            </table>
-        </div>
-
-        <div class="scores-section">
-            <p class="headline">High Score - Today</p>
+            <p class="headline">🏆 High Score - Today 🏆</p>
             <table>
                 <tr>
                     <th>User</th>
@@ -97,6 +79,24 @@
                 <tr>
                     <td>{{ score.user_name }}</td>
                     <td>{{ score.daily_score }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="scores-section">
+            <p class="headline">🔝 High Score - All-Time 🔝</p>
+            <table>
+                <tr>
+                    <th>User</th>
+                    <th>Score</th>
+                </tr>
+                {% for score in all_time_high_scores %}
+                {% if score.total_score is not none and score.total_score >= 0 %}
+                <tr>
+                    <td>{{ score.user_name }}</td>
+                    <td>{{ score.total_score }}</td>
                 </tr>
                 {% endif %}
                 {% endfor %}

@@ -19,6 +19,9 @@
             color: #0056b3;
             font-weight: bold;
         }
+        .car{
+            transform: scaleX(-1); /* Flips the emoji horizontally */
+        }
         .text {
             font-size: 1em;
             color: #0056b3;
@@ -70,11 +73,20 @@
             display: none;
             width: 100%;
             max-width: 600px; /* Same as your video */
-            margin-top: 10px;
+            margin-top: 20px;
         }
         progress {
             width: 100%;
             height: 5px; /* Adjust as needed */
+        }
+        .progress-container {
+            position: relative;
+            /* Other styles */
+        }
+        #carEmoji {
+            position: absolute;
+            top: -20px; /* Adjust as needed */
+            transform: translateX(-50%) scaleX(-1); /* Flips the emoji horizontally */
         }
     </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
@@ -98,6 +110,7 @@
     <div class="video-container">
         <div class="intro-content">
             <p class="headline"> Are you ready? </p>
+            <p class="car">🚗</p>
             <p class="text">
                 1. Turn up the volume <br>
                 2. Press "Start" and watch the video <br>
@@ -112,6 +125,11 @@
             <source src="{{ url_for('get_video') }}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
+
+        <div class="progress-container">
+            <progress id="videoProgress" value="0" max="100"></progress>
+            <div id="carEmoji" style="position: absolute;">🚗</div>
+        </div>
 
         <div class="progress-container">
             <progress id="videoProgress" value="0" max="100"></progress>
@@ -190,14 +208,31 @@
 
         var video = document.getElementById('challengeVideo');
         var videoProgress = document.getElementById('videoProgress');
+        var carEmoji = document.getElementById('carEmoji');
+        var offset = 10; // Starting offset in pixels, adjust as needed
 
-        video.addEventListener('timeupdate', function() {
-            var value = (100 / video.duration) * video.currentTime;
+        function updateCarPosition() {
+            var value = (video.currentTime / video.duration) * 100;
             videoProgress.value = value;
-        });
 
-        video.addEventListener('loadedmetadata', function() {
-            videoProgress.setAttribute('max', video.duration);
+            // Calculate the new position of the car emoji
+            var progressBarWidth = videoProgress.offsetWidth;
+            var newPosition = progressBarWidth * (value / 100) - carEmoji.offsetWidth / 2 + offset;
+
+            // Ensure the car doesn't go beyond the progress bar's bounds
+            newPosition = Math.max(newPosition, 0);
+            newPosition = Math.min(newPosition, progressBarWidth - carEmoji.offsetWidth);
+
+            carEmoji.style.left = newPosition + 'px';
+        }
+
+        // Update car position when the video updates time
+        video.addEventListener('timeupdate', updateCarPosition);
+
+        // Update car position when the video's duration is known
+        video.addEventListener('durationchange', function() {
+            videoProgress.setAttribute('max', 100);
+            updateCarPosition(); // Update car position to start with the offset
         });
     </script>
 
