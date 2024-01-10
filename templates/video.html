@@ -23,6 +23,11 @@
             font-size: 1em;
             color: #0056b3;
         }
+        .text2 {
+            font-size: 1em;
+            color: #0056b3;
+            font-weight: bold;
+        }
         .video-container {
             background-color: white;
             padding: 20px;
@@ -61,6 +66,16 @@
             margin-top: 10px;
             font-weight: bold;
         }
+        .progress-container {
+            display: none;
+            width: 100%;
+            max-width: 600px; /* Same as your video */
+            margin-top: 10px;
+        }
+        progress {
+            width: 100%;
+            height: 5px; /* Adjust as needed */
+        }
     </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <script>
@@ -98,8 +113,12 @@
             Your browser does not support the video tag.
         </video>
 
+        <div class="progress-container">
+            <progress id="videoProgress" value="0" max="100"></progress>
+        </div>
+
         <div class="hidden-content">
-            <p>What is our destination?</p>
+            <p class="text2">What is our destination?</p>
             <form id="answerForm" action="{{url_for('submit_answer')}}" method="post">
                 <input type="hidden" name="start_time" id="startTime">
                 <input type="hidden" name="answer" id="hiddenAnswer">
@@ -121,12 +140,14 @@
             var video = document.getElementById('challengeVideo');
             var hiddenContent = document.querySelector('.hidden-content');
             var introContent = document.querySelector('.intro-content');
+            var progressContainer = document.querySelector('.progress-container'); // Get the progress container
             var button = this;
 
             if (video.style.display === "none" || video.style.display === "") {
                 video.style.display = "block"; // Show the video
                 hiddenContent.style.display = "block"; // Show the hidden content
                 introContent.style.display = "none"; // Hide the intro content
+                progressContainer.style.display = "block"; // Show the progress bar
                 button.style.display = "none"; // Hide the button
                 video.play(); // Play the video
                 document.getElementById('startTime').value = Date.now() / 1000;
@@ -166,6 +187,18 @@
                 // Do not submit the form here
             }
         }
+
+        var video = document.getElementById('challengeVideo');
+        var videoProgress = document.getElementById('videoProgress');
+
+        video.addEventListener('timeupdate', function() {
+            var value = (100 / video.duration) * video.currentTime;
+            videoProgress.value = value;
+        });
+
+        video.addEventListener('loadedmetadata', function() {
+            videoProgress.setAttribute('max', video.duration);
+        });
     </script>
 
 </body>
