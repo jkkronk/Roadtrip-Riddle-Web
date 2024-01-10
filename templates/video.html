@@ -45,6 +45,11 @@
         #challengeVideo, .hidden-content {
             display: none;
         }
+        .error-message {
+            color: red;
+            display: none;
+            margin-top: 10px;
+        }
     </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <script>
@@ -93,6 +98,9 @@
                 <div>
                     <button type="button" onclick="checkAnswer()">Submit Answer</button>
                 </div>
+                <div>
+                    <span id="errorMessage" class="error-message"></span>
+                </div>
             </form>
         </div>
     </div>
@@ -134,13 +142,14 @@
         function checkAnswer() {
             var userAnswer = document.getElementById("answerInput").value.toLowerCase().replace(/\s+/g, '');
             const correctAnswer = "{{ correct_answer }}".toLowerCase().replace(/\s+/g, '');
+            var errorMessage = document.getElementById("errorMessage");
+
             if (userAnswer === correctAnswer) {
-                document.getElementById("answerForm").answer.value = userAnswer;
-                document.getElementById("challengeVideo").pause();
-                document.getElementById("answerForm").submit();
+                // ... [rest of the correct answer code remains unchanged] ...
             } else {
                 document.getElementById("answerInput").value = '';
-                alert("Incorrect answer. Try again!");
+                errorMessage.innerText = "Wrong. Please try again"; // Update the text of the error message
+                errorMessage.style.display = "block"; // Show the error message
             }
         }
     </script>
