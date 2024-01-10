@@ -59,6 +59,7 @@
             color: red;
             display: none;
             margin-top: 10px;
+            font-weight: bold;
         }
     </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
@@ -160,7 +161,7 @@
                 document.getElementById("answerForm").submit(); // This line submits the form
             } else {
                 document.getElementById("answerInput").value = '';
-                errorMessage.innerText = "Wrong. Please try again";
+                errorMessage.innerText = "Wrong! Please try again";
                 errorMessage.style.display = "block"; // Show the error message
                 // Do not submit the form here
             }
