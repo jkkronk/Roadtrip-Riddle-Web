@@ -1,6 +1,7 @@
 import time
+import datetime
 import os
-from flask import Flask, request, render_template, redirect, url_for, session, send_file
+from flask import Flask, request, render_template, redirect, url_for, session, send_file, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_oauthlib.client import OAuth
 from flask_httpauth import HTTPBasicAuth
@@ -46,14 +47,18 @@ def get_video():
     video_path = f"{os.environ.get('RR_DATA_PATH')}quiz.mp4"
     return send_file(video_path, as_attachment=True)
 
-
 # Route for the video page
 @app.route('/video')
 def video():
+    # Check if the user has a valid cookie
+    if request.cookies.get('played_today'):
+        # Redirect to score if they've already played today
+        return redirect(url_for('score'))
+
+    # Rest of your existing code
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     correct_answer = utils.get_answer(quiz_path)
     return render_template('video.html', correct_answer=correct_answer)
-
 
 @app.route('/high_scores')
 def high_scores():
@@ -75,7 +80,12 @@ def submit_answer():
     time_taken = end_time - start_time
     score = utils.calculate_score(time_taken, video_path)
     session['latest_score'] = score
-    return redirect(url_for('score'))
+
+    # Set a cookie that expires in 24 hours
+    resp = make_response(redirect(url_for('score')))
+    expiration_datetime = utils.get_expiration_time()
+    resp.set_cookie('played_today', 'true', expires=expiration_datetime)
+    return resp
 
 # Route for the score page
 @app.route('/score')

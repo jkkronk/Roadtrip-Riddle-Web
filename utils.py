@@ -2,7 +2,27 @@ from moviepy.editor import VideoFileClip
 import json
 import os
 import shutil
+from datetime import datetime, timedelta, time
+import pytz
 
+def get_expiration_time():
+    # Define the timezone
+    timezone = pytz.timezone('Europe/Brussels')  # Use the appropriate European timezone
+
+    # Get the current time in the specified timezone
+    now = datetime.now(timezone)
+
+    # Define the expiration time as 05:00
+    expiration_time = time(5, 0, 0)
+
+    # Combine the current date and the expiration time
+    expiration_datetime = datetime.combine(now.date(), expiration_time, tzinfo=timezone)
+
+    # If it's already past 05:00, set the expiration for the next day
+    if now.time() > expiration_time:
+        expiration_datetime += timedelta(days=1)
+
+    return expiration_datetime
 
 # Function to calculate the score
 def calculate_score(time_taken, video_file_path):
