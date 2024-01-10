@@ -27,7 +27,7 @@
             border-radius: 8px;
         }
         button {
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
             padding: 10px 15px;
             border: none;
@@ -36,7 +36,13 @@
             margin-top: 20px;
         }
         button:hover {
-            background-color: #218838;
+            background-color: #0056b3;
+        }
+        #challengeVideo {
+            display: none;
+        }
+        #challengeVideo, .hidden-content {
+            display: none;
         }
     </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
@@ -58,9 +64,15 @@
 </head>
 <body>
     <div class="video-container">
-        <div>
+        <div class="intro-content">
+            <h1> Are you ready? </h1>
+            <p>
+                1. Turn up the volume <br>
+                2. Press "Start" and watch the video <br>
+                3. Try to guess the destination as fast as possible
+            </p>
             <button id="togglePlayPause">
-                Start Video
+                Start
             </button>
         </div>
 
@@ -68,38 +80,62 @@
             <source src="{{ url_for('get_video') }}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
-        <p>What is our destination?</p>
-        <form id="answerForm" action="{{url_for('submit_answer')}}" method="post">
-            <input type="hidden" name="start_time" id="startTime">
-            <input type="hidden" name="answer" id="hiddenAnswer">
-            <div>
-                <input type="text" id="answerInput" placeholder="Atlantis" required>
-            </div>
-            <div>
-                <button type="button" onclick="checkAnswer()">Submit Answer</button>
-            </div>
-        </form>
+
+        <div class="hidden-content">
+            <p>What is our destination?</p>
+            <form id="answerForm" action="{{url_for('submit_answer')}}" method="post">
+                <input type="hidden" name="start_time" id="startTime">
+                <input type="hidden" name="answer" id="hiddenAnswer">
+                <div>
+                    <input type="text" id="answerInput" placeholder="Atlantis" required>
+                </div>
+                <div>
+                    <button type="button" onclick="checkAnswer()">Submit Answer</button>
+                </div>
+            </form>
+        </div>
     </div>
     <script>
-        document.getElementById('startTime').value = 0; // Set start time to 0
-
-        // JavaScript to play button
+        // JavaScript to toggle video visibility and play, and to record start time
         document.getElementById('togglePlayPause').addEventListener('click', function() {
             var video = document.getElementById('challengeVideo');
-            if (video.paused) {
+            var hiddenContent = document.querySelector('.hidden-content');
+            var introContent = document.querySelector('.intro-content');
+            var button = this;
+
+            if (video.style.display === "none" || video.style.display === "") {
+                video.style.display = "block"; // Show the video
+                hiddenContent.style.display = "block"; // Show the hidden content
+                introContent.style.display = "none"; // Hide the intro content
+                button.style.display = "none"; // Hide the button
+                video.play(); // Play the video
+                document.getElementById('startTime').value = Date.now() / 1000;
+            } else if (video.paused) {
                 video.play();
-                // Record the start time when the video is played
-                document.getElementById('startTime').value = Date.now() / 1000; // Current time in seconds
             }
         });
 
         // JavaScript to submit form on enter keypress
         document.getElementById("answerInput").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault(); // Prevent default form submit
-            checkAnswer();
-        }
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent default form submit
+                checkAnswer();
+            }
         });
+
+        // Function to check answer (remains unchanged)
+        function checkAnswer() {
+            var userAnswer = document.getElementById("answerInput").value.toLowerCase().replace(/\s+/g, '');
+            const correctAnswer = "{{ correct_answer }}".toLowerCase().replace(/\s+/g, '');
+            if (userAnswer === correctAnswer) {
+                document.getElementById("answerForm").answer.value = userAnswer;
+                document.getElementById("challengeVideo").pause();
+                document.getElementById("answerForm").submit();
+            } else {
+                document.getElementById("answerInput").value = '';
+                alert("Incorrect answer. Try again!");
+            }
+        }
     </script>
 
 </body>
