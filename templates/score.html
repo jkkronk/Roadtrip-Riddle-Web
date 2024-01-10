@@ -15,6 +15,12 @@
             height: 100vh;
             flex-direction: column; /* Optional, if you want vertical stacking */
         }
+        .headline {
+            font-size: 1em;
+            color: #007bff;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
         .score-container {
             background-color: white;
             padding: 20px;
@@ -86,10 +92,10 @@
 </head>
 <body>
     <div class="score-container">
-        <h2>We are going to... </h2>
+        <p class="headline">We are going to... </p>
         <div class="score">{{ correct_answer }}</div>
 
-        <h1>Your Score</h1>
+        <p class="headline">Your Score</p>
         <div class="score">{{ score }}</div>
 
         <!-- Social Share Buttons -->
@@ -107,7 +113,7 @@
 
         <!-- Daily High Scores Section -->
         <div class="daily-high-scores">
-            <h2>Today's High Scores</h2>
+            <p class="headline">High Score Today</p>
             <table>
                 <tr>
                     <th>User</th>
