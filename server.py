@@ -10,8 +10,8 @@ import utils
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
-#app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 
@@ -182,7 +182,8 @@ class HighScore(db.Model):
 
 
 with app.app_context():
-    db.create_all()
+    if not os.path.exists(os.path.join(os.environ.get('RR_DATA_PATH'), "users.db")):
+        db.create_all()
 
 
 @app.route('/explanations')
