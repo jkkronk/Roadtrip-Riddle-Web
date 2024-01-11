@@ -185,7 +185,7 @@
         // Event listener for the video ending
         document.getElementById('challengeVideo').addEventListener('ended', function() {
             // Redirect to the score page with the score
-            window.location.href = "/score";
+           setTimeout(function() {window.location.href = "/score";}, 5000); // 5000 milliseconds = 5 seconds
         });
 
         // Function to check answer (remains unchanged)
@@ -221,7 +221,7 @@
 
             // Ensure the car doesn't go beyond the progress bar's bounds
             newPosition = Math.max(newPosition, 0);
-            newPosition = Math.min(newPosition, progressBarWidth - carEmoji.offsetWidth);
+            newPosition = Math.min(newPosition, progressBarWidth - carEmoji.offsetWidth / 2 + offset);
 
             carEmoji.style.left = newPosition + 'px';
         }

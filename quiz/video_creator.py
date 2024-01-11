@@ -1,6 +1,6 @@
 import os
 import cv2
-from moviepy.editor import VideoFileClip, AudioFileClip
+from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips
 
 def images_to_video(folder, image_duration=0.4, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
     frame_folder = os.path.join(folder, "frames")
@@ -40,7 +40,10 @@ def create_new_video(data_dir="/var/data/"):
     video_clip = VideoFileClip(os.path.join(data_dir, "quiz_no_audio.mp4"))
     # Load the audio file
     audio_clip = AudioFileClip(os.path.join(data_dir, "quiz.mp3"))
-    final_clip = video_clip.set_audio(audio_clip)
+    # Create a silent audio clip with a duration of 5 seconds
+    silent_clip = AudioClip(lambda t: [0]*2, duration=5, fps=44100)
+    final_audio = concatenate_audioclips([audio_clip, silent_clip])
+    final_clip = video_clip.set_audio(final_audio)
 
     # Write the result to a file
     final_clip.write_videofile(os.path.join(data_dir, "quiz.mp4"), codec='libx264', audio_codec='aac')

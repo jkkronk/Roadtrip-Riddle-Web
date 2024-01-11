@@ -45,8 +45,8 @@ def calculate_heading(lat1, lng1, lat2, lng2):
     return heading
 
 
-def duration_to_num_points(duration, image_duration=0.4):
-    num_points = int(duration / image_duration) + 10  # Add 5 points to ensure enough images
+def duration_to_num_points(duration, image_duration=0.4, extra_duration=10):
+    num_points = int((duration + extra_duration) / image_duration)
     return num_points
 
 
