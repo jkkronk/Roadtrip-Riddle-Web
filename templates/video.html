@@ -14,6 +14,23 @@
             align-items: center;
             height: 100vh;
         }
+        .headline {
+            font-size: 2em;
+            color: #0056b3;
+            font-weight: bold;
+        }
+        .car{
+            transform: scaleX(-1); /* Flips the emoji horizontally */
+        }
+        .text {
+            font-size: 1em;
+            color: #0056b3;
+        }
+        .text2 {
+            font-size: 1em;
+            color: #0056b3;
+            font-weight: bold;
+        }
         .video-container {
             background-color: white;
             padding: 20px;
@@ -25,6 +42,7 @@
             width: 100%;
             max-width: 600px; /* Adjust as necessary */
             border-radius: 8px;
+            border: 2px solid #007bff; /* adds a blue border around the logo */
         }
         button {
             background-color: #007bff;
@@ -34,6 +52,7 @@
             border-radius: 4px;
             cursor: pointer;
             margin-top: 20px;
+            font-weight: bold;
         }
         button:hover {
             background-color: #0056b3;
@@ -43,6 +62,31 @@
         }
         #challengeVideo, .hidden-content {
             display: none;
+        }
+        .error-message {
+            color: red;
+            display: none;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .progress-container {
+            display: none;
+            width: 100%;
+            max-width: 600px; /* Same as your video */
+            margin-top: 20px;
+        }
+        progress {
+            width: 100%;
+            height: 5px; /* Adjust as needed */
+        }
+        .progress-container {
+            position: relative;
+            /* Other styles */
+        }
+        #carEmoji {
+            position: absolute;
+            top: -20px; /* Adjust as needed */
+            transform: translateX(-50%) scaleX(-1); /* Flips the emoji horizontally */
         }
     </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
@@ -65,8 +109,9 @@
 <body>
     <div class="video-container">
         <div class="intro-content">
-            <h1> Are you ready? </h1>
-            <p>
+            <p class="headline"> Are you ready? </p>
+            <p class="car">🚗</p>
+            <p class="text">
                 1. Turn up the volume <br>
                 2. Press "Start" and watch the video <br>
                 3. Try to guess the destination as fast as possible
@@ -76,13 +121,22 @@
             </button>
         </div>
 
-        <video id="challengeVideo">
+        <video id="challengeVideo" playsinline>
             <source src="{{ url_for('get_video') }}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
 
+        <div class="progress-container">
+            <progress id="videoProgress" value="0" max="100"></progress>
+            <div id="carEmoji" style="position: absolute;">🚗</div>
+        </div>
+
+        <div class="progress-container">
+            <progress id="videoProgress" value="0" max="100"></progress>
+        </div>
+
         <div class="hidden-content">
-            <p>What is our destination?</p>
+            <p class="text2">What is our destination?</p>
             <form id="answerForm" action="{{url_for('submit_answer')}}" method="post">
                 <input type="hidden" name="start_time" id="startTime">
                 <input type="hidden" name="answer" id="hiddenAnswer">
@@ -91,6 +145,9 @@
                 </div>
                 <div>
                     <button type="button" onclick="checkAnswer()">Submit Answer</button>
+                </div>
+                <div>
+                    <span id="errorMessage" class="error-message"></span>
                 </div>
             </form>
         </div>
@@ -101,12 +158,14 @@
             var video = document.getElementById('challengeVideo');
             var hiddenContent = document.querySelector('.hidden-content');
             var introContent = document.querySelector('.intro-content');
+            var progressContainer = document.querySelector('.progress-container'); // Get the progress container
             var button = this;
 
             if (video.style.display === "none" || video.style.display === "") {
                 video.style.display = "block"; // Show the video
                 hiddenContent.style.display = "block"; // Show the hidden content
                 introContent.style.display = "none"; // Hide the intro content
+                progressContainer.style.display = "block"; // Show the progress bar
                 button.style.display = "none"; // Hide the button
                 video.play(); // Play the video
                 document.getElementById('startTime').value = Date.now() / 1000;
@@ -123,19 +182,58 @@
             }
         });
 
+        // Event listener for the video ending
+        document.getElementById('challengeVideo').addEventListener('ended', function() {
+            // Redirect to the score page with the score
+            window.location.href = "/score";
+        });
+
         // Function to check answer (remains unchanged)
         function checkAnswer() {
             var userAnswer = document.getElementById("answerInput").value.toLowerCase().replace(/\s+/g, '');
             const correctAnswer = "{{ correct_answer }}".toLowerCase().replace(/\s+/g, '');
+            var errorMessage = document.getElementById("errorMessage");
+
             if (userAnswer === correctAnswer) {
                 document.getElementById("answerForm").answer.value = userAnswer;
                 document.getElementById("challengeVideo").pause();
-                document.getElementById("answerForm").submit();
+                document.getElementById("answerForm").submit(); // This line submits the form
             } else {
                 document.getElementById("answerInput").value = '';
-                alert("Incorrect answer. Try again!");
+                errorMessage.innerText = "Wrong! Please try again";
+                errorMessage.style.display = "block"; // Show the error message
+                // Do not submit the form here
             }
         }
+
+        var video = document.getElementById('challengeVideo');
+        var videoProgress = document.getElementById('videoProgress');
+        var carEmoji = document.getElementById('carEmoji');
+        var offset = 10; // Starting offset in pixels, adjust as needed
+
+        function updateCarPosition() {
+            var value = (video.currentTime / video.duration) * 100;
+            videoProgress.value = value;
+
+            // Calculate the new position of the car emoji
+            var progressBarWidth = videoProgress.offsetWidth;
+            var newPosition = progressBarWidth * (value / 100) - carEmoji.offsetWidth / 2 + offset;
+
+            // Ensure the car doesn't go beyond the progress bar's bounds
+            newPosition = Math.max(newPosition, 0);
+            newPosition = Math.min(newPosition, progressBarWidth - carEmoji.offsetWidth);
+
+            carEmoji.style.left = newPosition + 'px';
+        }
+
+        // Update car position when the video updates time
+        video.addEventListener('timeupdate', updateCarPosition);
+
+        // Update car position when the video's duration is known
+        video.addEventListener('durationchange', function() {
+            videoProgress.setAttribute('max', 100);
+            updateCarPosition(); // Update car position to start with the offset
+        });
     </script>
 
 </body>

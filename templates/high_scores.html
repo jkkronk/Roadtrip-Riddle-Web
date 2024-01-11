@@ -12,6 +12,12 @@
             padding: 20px;
             text-align: center;
         }
+        .headline {
+            font-size: 2em;
+            color: #0056b3;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
         .high-scores-container {
             background-color: white;
             margin: auto;
@@ -31,7 +37,7 @@
             text-align: center;
         }
         th {
-            background-color: #007bff;
+            background-color: #0056b3;
             color: white;
         }
         tr:nth-child(even) {
@@ -62,25 +68,7 @@
 <body>
     <div class="high-scores-container">
         <div class="scores-section">
-            <h2>All-Time Highscore</h2>
-            <table>
-                <tr>
-                    <th>User</th>
-                    <th>Score</th>
-                </tr>
-                {% for score in all_time_high_scores %}
-                {% if score.total_score is not none and score.total_score >= 0 %}
-                <tr>
-                    <td>{{ score.user_name }}</td>
-                    <td>{{ score.total_score }}</td>
-                </tr>
-                {% endif %}
-                {% endfor %}
-            </table>
-        </div>
-
-        <div class="scores-section">
-            <h2>Today's Highscore</h2>
+            <p class="headline">🏆 High Score - Today 🏆</p>
             <table>
                 <tr>
                     <th>User</th>
@@ -91,6 +79,24 @@
                 <tr>
                     <td>{{ score.user_name }}</td>
                     <td>{{ score.daily_score }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="scores-section">
+            <p class="headline">🔝 High Score - All-Time 🔝</p>
+            <table>
+                <tr>
+                    <th>User</th>
+                    <th>Score</th>
+                </tr>
+                {% for score in all_time_high_scores %}
+                {% if score.total_score is not none and score.total_score >= 0 %}
+                <tr>
+                    <td>{{ score.user_name }}</td>
+                    <td>{{ score.total_score }}</td>
                 </tr>
                 {% endif %}
                 {% endfor %}

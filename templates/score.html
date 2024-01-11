@@ -13,6 +13,18 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            flex-direction: column; /* Optional, if you want vertical stacking */
+        }
+        .headline {
+            font-size: 2em;
+            color: #0056b3;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .text {
+            font-size: 1em;
+            color: #0056b3;
+            font-weight: bold;
         }
         .score-container {
             background-color: white;
@@ -20,15 +32,12 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            max-width: 1000px;
         }
         .score {
             font-size: 2em;
             color: #28a745;
             margin: 20px 0;
-        }
-        .user-name {
-            font-size: 1.2em;
-            margin-bottom: 20px;
         }
         button {
             background-color: #007bff;
@@ -38,6 +47,7 @@
             border-radius: 4px;
             cursor: pointer;
             width: 100%;
+            font-weight: bold;
         }
         button:hover {
             background-color: #0056b3;
@@ -56,7 +66,7 @@
             text-align: center; /* Center text in table cells */
         }
         th {
-            background-color: #007bff;
+            background-color: #0056b3;
             color: white;
         }
         tr:nth-child(even) {
@@ -64,7 +74,27 @@
         }
         .social-share a {
             margin-top: 10px;
-            display: block; /* Makes each link appear on a new line */
+            display: inline-block;
+            margin-right: 10px; /* Adjust right margin for spacing */
+            width: auto; /* Adjust width */
+        }
+        .share-button-style {
+            width: auto; /* Change from 100% to auto */
+            background-color: #007bff;
+            color: white;
+            padding: 10px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-family: 'Arial', sans-serif;
+            display: inline-block; /* To ensure link behaves like a button */
+            text-decoration: none; /* Remove underline from link */
+            margin: 10px 0; /* Consistent margin */
+            font-weight: bold;
+        }
+        .share-button-style:hover {
+            background-color: #0056b3;
         }
         .button-style {
             width: 100%;
@@ -79,6 +109,7 @@
             display: inline-block; /* To ensure link behaves like a button */
             text-decoration: none; /* Remove underline from link */
             margin: 10px 0; /* Consistent margin */
+            font-weight: bold;
         }
         .button-style:hover {
             background-color: #0056b3;
@@ -88,19 +119,20 @@
 </head>
 <body>
     <div class="score-container">
-        <h1>Your Score</h1>
-        <div class="score">{{ score }}</div>
-        <div class="user-name">Great job!</div>
+        <p class="headline">We are going to... </p>
+        <div class="score">🏁 {{ correct_answer }} 🏁</div>
 
+        <p class="headline">Your Score</p>
+        <div class="score">{{ score }}</div>
 
         <!-- Social Share Buttons -->
         <div class="social-share">
             <!-- Twitter -->
-            <a href="https://twitter.com/intent/tweet?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="button-style">
+            <a href="https://twitter.com/intent/tweet?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="share-button-style">
                 <i class="fab fa-twitter"></i> <!-- Home icon -->
             </a>
             <!-- WhatsApp -->
-            <a href="https://wa.me/?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="button-style">
+            <a href="https://wa.me/?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="share-button-style">
                 <i class="fab fa-whatsapp"></i> <!-- Home icon -->
             </a>
         </div>
@@ -108,7 +140,7 @@
 
         <!-- Daily High Scores Section -->
         <div class="daily-high-scores">
-            <h2>Today's High Scores</h2>
+            <p class="text">🏆 High Score Today 🏆</p>
             <table>
                 <tr>
                     <th>User</th>

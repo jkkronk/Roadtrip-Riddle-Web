@@ -1,18 +1,28 @@
 from moviepy.editor import VideoFileClip
 import json
-import asyncio
+import os
+import shutil
+from datetime import datetime, timedelta, time
+import pytz
 
-def clear_daily_high_scores():
-    from server import app, db, HighScore
-    with app.app_context():  # This line creates the application context
-        try:
-            # Reset daily scores for all users
-            HighScore.query.update({HighScore.daily_score: 0})
-            db.session.commit()
-        except Exception as e:
-            print("Error resetting daily high scores:", e)
-            db.session.rollback()
+def get_expiration_time():
+    # Define the timezone
+    timezone = pytz.timezone('Europe/Brussels')  # Use the appropriate European timezone
 
+    # Get the current time in the specified timezone
+    now = datetime.now(timezone)
+
+    # Define the expiration time as 05:00
+    expiration_time = time(5, 0, 0)
+
+    # Combine the current date and the expiration time
+    expiration_datetime = datetime.combine(now.date(), expiration_time, tzinfo=timezone)
+
+    # If it's already past 05:00, set the expiration for the next day
+    if now.time() > expiration_time:
+        expiration_datetime += timedelta(days=1)
+
+    return expiration_datetime
 
 # Function to calculate the score
 def calculate_score(time_taken, video_file_path):
@@ -38,8 +48,8 @@ def get_explanations(file_path):
     clues = quiz_data.get('clues', [])
     clues_and_explanations = []
     for idx, clue in enumerate(clues):
-        clues_and_explanations.append("<b>" + clue + "</b>")
-        clues_and_explanations.append("Explanation: " + explanations[idx] + "<br><br>")
+        clues_and_explanations.append("<b>🚗 " + clue + "</b>")
+        clues_and_explanations.append("💡 " + explanations[idx] + "<br><br>")
 
     return clues_and_explanations
 
@@ -64,3 +74,17 @@ def save_high_score_to_json(user_name, score, file_name, add_if_existing=False):
     # Save back to file
     with open(file_name, 'w') as file:
         json.dump(high_scores, file, indent=4)
+
+
+def remove_files_and_folders(folder_path):
+    # Check each item in the folder
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)
+
+        # If the item is a file, remove it
+        if os.path.isfile(item_path):
+            os.remove(item_path)
+        # If the item is a directory, remove the directory and its contents
+        elif os.path.isdir(item_path):
+            shutil.rmtree(item_path)
+

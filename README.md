@@ -17,3 +17,12 @@ export FLASK_APP=server.py
 flash run
 ```
 
+The riddles can be updated by calling the following url:
+```bash
+curl admin::password http://localhost:5000/clear_quiz
+curl admin::password http://localhost:5000/new_quiz
+curl admin::password http://localhost:5000/new_frames
+curl admin::password http://localhost:5000/new_video
+curl admin::password http://localhost:5000/clear_highscore 
+```
+
