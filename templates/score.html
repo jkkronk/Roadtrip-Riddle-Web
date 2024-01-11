@@ -128,13 +128,17 @@
         <!-- Social Share Buttons -->
         <div class="social-share">
             <!-- Twitter -->
-            <a href="https://twitter.com/intent/tweet?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="share-button-style">
-                <i class="fab fa-twitter"></i> <!-- Home icon -->
+            <a href="https://twitter.com/intent/tweet?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20%F0%9F%9A%97%20roadtrip-riddle.onrender.com%20%F0%9F%9A%97" target="_blank" class="share-button-style">
+                <i class="fab fa-twitter"></i>
             </a>
             <!-- WhatsApp -->
-            <a href="https://wa.me/?text=I%20got%20{{ score }}%20points%20in%20Roadtrip%20Riddle.%20Try%20to%20beat%20me!%20roadtrip-riddle.onrender.com" target="_blank" class="share-button-style">
-                <i class="fab fa-whatsapp"></i> <!-- Home icon -->
+            <a id="whatsappShare" class="share-button-style">
+                <i class="fab fa-whatsapp"></i>
             </a>
+            <!-- Clipboard -->
+            <button id="shareButton" class="share-button-style">
+                <i class="fas fa-clipboard"></i>
+            </button>
         </div>
 
 
@@ -178,5 +182,24 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+
+    <script>
+    document.getElementById("shareButton").addEventListener("click", function() {
+        const score = "{{ score }}"; // Assuming 'score' is the variable you want to share
+        navigator.clipboard.writeText("I scored " + score + " points in Roadtrip Riddle! Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗")
+        .then(() => {
+            alert("I scored " + score + " points in Roadtrip Riddle! Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗 \n \n Share message copied to clipboard!");
+        })
+        .catch(err => {
+            console.error('Error in copying text: ', err);
+        });
+    });
+    document.getElementById("whatsappShare").addEventListener("click", function() {
+        var score = "{{ score }}"; // Your score variable
+        var text = "I got " + score + " points in Roadtrip Riddle. Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗";
+        var whatsappUrl = "https://api.whatsapp.com/send/?text=" + encodeURIComponent(text);
+        window.open(whatsappUrl, '_blank'); // Open the link in a new tab/window
+    });
+    </script>
 </body>
 </html>
