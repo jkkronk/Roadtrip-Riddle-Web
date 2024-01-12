@@ -181,11 +181,6 @@ class HighScore(db.Model):
         return '<HighScore %r>' % self.user_name
 
 
-with app.app_context():
-    if not os.path.exists(os.path.join(os.environ.get('RR_DATA_PATH'), "users.db")):
-        db.create_all()
-
-
 @app.route('/explanations')
 def explanations():
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'),"quiz.json")
@@ -239,4 +234,8 @@ def new_video():
     return "Video created!"
 
 if __name__ == '__main__':
+    with app.app_context():
+        if not os.path.exists(os.path.join(os.environ.get('RR_DATA_PATH'), "users.db")):
+            db.create_all()
+
     app.run(debug=False)
