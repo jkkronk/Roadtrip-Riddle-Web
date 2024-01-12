@@ -11,7 +11,7 @@ from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 
@@ -36,6 +36,7 @@ google = oauth.remote_app(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
 )
 
+
 # Route for the home page
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -46,6 +47,7 @@ def home():
 def get_video():
     video_path = f"{os.environ.get('RR_DATA_PATH')}quiz.mp4"
     return send_file(video_path, as_attachment=True)
+
 
 # Route for the video page
 @app.route('/video')
@@ -60,11 +62,13 @@ def video():
     correct_answer = utils.get_answer(quiz_path)
     return render_template('video.html', correct_answer=correct_answer)
 
+
 @app.route('/high_scores')
 def high_scores():
     daily_scores = HighScore.query.order_by(HighScore.daily_score.desc()).all()
     all_time_high_scores = HighScore.query.order_by(HighScore.total_score.desc()).all()
-    return render_template('high_scores.html', all_time_high_scores=all_time_high_scores, daily_high_scores=daily_scores)
+    return render_template('high_scores.html', all_time_high_scores=all_time_high_scores,
+                           daily_high_scores=daily_scores)
 
 
 @app.route('/info')
@@ -74,7 +78,7 @@ def info():
 
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():
-    video_path = os.path.join(os.environ.get('RR_DATA_PATH'),"quiz.mp4")
+    video_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.mp4")
     start_time = float(request.form['start_time'])
     end_time = time.time()
     time_taken = end_time - start_time
@@ -86,6 +90,7 @@ def submit_answer():
     expiration_datetime = utils.get_expiration_time()
     resp.set_cookie('played_today', 'true', expires=expiration_datetime)
     return resp
+
 
 # Route for the score page
 @app.route('/score')
@@ -181,9 +186,13 @@ class HighScore(db.Model):
         return '<HighScore %r>' % self.user_name
 
 
+with app.app_context():
+    db.create_all()
+
+
 @app.route('/explanations')
 def explanations():
-    quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'),"quiz.json")
+    quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     return render_template('explanations.html', explanations=utils.get_explanations(quiz_path))
 
 
@@ -191,10 +200,12 @@ def explanations():
 def get_google_oauth_token():
     return session.get('google_token')
 
+
 @auth.verify_password
 def verify_password(username, password):
     if username in users and users[username] == password:
         return username
+
 
 @app.route('/clear_highscore')
 @auth.login_required
@@ -209,11 +220,13 @@ def clear_highscore():
             db.session.rollback()
     return "Highscores cleared!"
 
+
 @app.route('/clear_quiz')
 @auth.login_required
 def clear_quiz():
     utils.remove_files_and_folders(os.environ.get('RR_DATA_PATH'))
     return "Quiz cleared!"
+
 
 @app.route('/new_quiz')
 @auth.login_required
@@ -221,11 +234,13 @@ def new_quiz():
     quiz_creator.create_new_quiz(os.environ.get('RR_DATA_PATH'))
     return "Quiz created!"
 
+
 @app.route('/new_frames')
 @auth.login_required
 def new_frames():
     street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
     return "Frames created!"
+
 
 @app.route('/new_video')
 @auth.login_required
@@ -233,9 +248,6 @@ def new_video():
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
 
-if __name__ == '__main__':
-    with app.app_context():
-        if not os.path.exists(os.path.join(os.environ.get('RR_DATA_PATH'), "users.db")):
-            db.create_all()
 
+if __name__ == '__main__':
     app.run(debug=False)
