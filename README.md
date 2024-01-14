@@ -1,8 +1,9 @@
 # quiz-game
 
-This is a flask / python app for a riddle game. The app is refreshing the riddles once 24h. 
+This is a flask / python app for a riddle game. It uses gpt-4 to create a quiz and clues + explanations. Additionally, 
+a stop-motion video is created using google map api. 
 
-Have fun!
+Here is the app deployed on render: https://roadtrip-riddle.onrender.com
 
 ## Installation
 

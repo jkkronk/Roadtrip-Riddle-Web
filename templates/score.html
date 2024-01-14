@@ -13,7 +13,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            flex-direction: column; /* Optional, if you want vertical stacking */
+            flex-direction: column; /* If you want vertical stacking */
         }
         .headline {
             font-size: 2em;
@@ -54,7 +54,7 @@
         }
         table {
             width: 100%;
-            max-width: 600px; /* Optional: limit the maximum width of the table */
+            max-width: 600px; /* Limit the maximum width of the table */
             margin-left: auto;
             margin-right: auto;
             border-collapse: collapse;
@@ -79,7 +79,7 @@
             width: auto; /* Adjust width */
         }
         .share-button-style {
-            width: auto; /* Change from 100% to auto */
+            width: auto;
             background-color: #007bff;
             color: white;
             padding: 10px 10px;
@@ -185,7 +185,7 @@
 
     <script>
     document.getElementById("shareButton").addEventListener("click", function() {
-        const score = "{{ score }}"; // Assuming 'score' is the variable you want to share
+        const score = "{{ score }}";
         navigator.clipboard.writeText("I scored " + score + " points in Roadtrip Riddle! Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗")
         .then(() => {
             alert("I scored " + score + " points in Roadtrip Riddle! Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗 \n \n Share message copied to clipboard!");
@@ -195,7 +195,7 @@
         });
     });
     document.getElementById("whatsappShare").addEventListener("click", function() {
-        var score = "{{ score }}"; // Your score variable
+        var score = "{{ score }}";
         var text = "I got " + score + " points in Roadtrip Riddle. Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗";
         var whatsappUrl = "https://api.whatsapp.com/send/?text=" + encodeURIComponent(text);
         window.open(whatsappUrl, '_blank'); // Open the link in a new tab/window

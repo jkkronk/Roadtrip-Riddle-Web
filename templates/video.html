@@ -72,12 +72,12 @@
         .progress-container {
             display: none;
             width: 100%;
-            max-width: 600px; /* Same as your video */
+            max-width: 600px; /* Same as video */
             margin-top: 20px;
         }
         progress {
             width: 100%;
-            height: 5px; /* Adjust as needed */
+            height: 5px;
         }
         .progress-container {
             position: relative;
@@ -85,7 +85,7 @@
         }
         #carEmoji {
             position: absolute;
-            top: -20px; /* Adjust as needed */
+            top: -20px;
             transform: translateX(-50%) scaleX(-1); /* Flips the emoji horizontally */
         }
     </style>
@@ -95,9 +95,9 @@
             var userAnswer = document.getElementById("answerInput").value.toLowerCase().replace(/\s+/g, '');
             const correctAnswer = "{{ correct_answer }}".toLowerCase().replace(/\s+/g, '');
             if (userAnswer === correctAnswer) {
-                document.getElementById("answerForm").answer.value = userAnswer; // Assuming there's a hidden input for answer
+                document.getElementById("answerForm").answer.value = userAnswer;
                 document.getElementById("challengeVideo").pause();
-                document.getElementById("answerForm").submit(); // Ensure this is correctly submitting
+                document.getElementById("answerForm").submit();
             } else {
                 document.getElementById("answerInput").value = '';
                 alert("Incorrect answer. Try again!");
@@ -153,7 +153,7 @@
         </div>
     </div>
     <script>
-        // JavaScript to toggle video visibility and play, and to record start time
+        // Toggle video visibility and play, and to record start time
         document.getElementById('togglePlayPause').addEventListener('click', function() {
             var video = document.getElementById('challengeVideo');
             var hiddenContent = document.querySelector('.hidden-content');
@@ -174,7 +174,7 @@
             }
         });
 
-        // JavaScript to submit form on enter keypress
+        // Submit form on enter keypress
         document.getElementById("answerInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault(); // Prevent default form submit
@@ -188,7 +188,7 @@
            setTimeout(function() {window.location.href = "/score";}, 5000); // 5000 milliseconds = 5 seconds
         });
 
-        // Function to check answer (remains unchanged)
+        // Function to check answer
         function checkAnswer() {
             var userAnswer = document.getElementById("answerInput").value.toLowerCase().replace(/\s+/g, '');
             const correctAnswer = "{{ correct_answer }}".toLowerCase().replace(/\s+/g, '');
