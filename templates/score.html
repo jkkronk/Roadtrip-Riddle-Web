@@ -185,7 +185,6 @@
 
     <script>
     document.getElementById("shareButton").addEventListener("click", function() {
-        const score = "{{ score }}";
         navigator.clipboard.writeText("I scored " + score + " points in Roadtrip Riddle! Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗")
         .then(() => {
             alert("I scored " + score + " points in Roadtrip Riddle! Try to beat me! 🚗 roadtrip-riddle.onrender.com 🚗 \n \n Share message copied to clipboard!");
