@@ -82,7 +82,7 @@ def remove_files_and_folders(folder_path):
         item_path = os.path.join(folder_path, item)
 
         # If the item is a file, remove it
-        if os.path.isfile(item_path):
+        if os.path.isfile(item_path) and not item_path.endswith('.db'):
             os.remove(item_path)
         # If the item is a directory, remove the directory and its contents
         elif os.path.isdir(item_path):
