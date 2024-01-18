@@ -5,6 +5,11 @@ a stop-motion video is created using google map api.
 
 Here is the app deployed on render: https://roadtrip-riddle.onrender.com
 
+<img src="misc/home_page.png">
+<img src="misc/quiz_page.png">
+<img src="misc/score_page.png">
+
+
 ## Installation
 
 ## Usage
