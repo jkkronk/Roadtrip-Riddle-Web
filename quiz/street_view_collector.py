@@ -8,8 +8,15 @@ from PIL import Image
 import os
 import pickle
 
-def add_logo_on_top(image):
-    logo = Image.open("./data/logo.png")
+
+def add_logo_on_top(image, logo_path="./data/logo.png"):
+    """
+    Add the logo on top of the image
+    :param image: Background image to add the logo on top of
+    :return: Image with the logo on top
+    """
+
+    logo = Image.open(logo_path)
     logo_width, logo_height = logo.size
     # Resize the logo to be a bit smaller than the width of the first image in the list
     base_width, base_height = image.size
@@ -26,8 +33,15 @@ def add_logo_on_top(image):
     return image
 
 
-
 def calculate_heading(lat1, lng1, lat2, lng2):
+    """
+    Calculate the heading between two points
+    :param lat1: latitude of the first point
+    :param lng1: longitude of the first point
+    :param lat2: latitude of the second point
+    :param lng2: longitude of the second point
+    :return: heading in degrees
+    """
     # Convert degrees to radians
     lat1, lng1, lat2, lng2 = map(math.radians, [lat1, lng1, lat2, lng2])
 
@@ -46,11 +60,26 @@ def calculate_heading(lat1, lng1, lat2, lng2):
 
 
 def duration_to_num_points(duration, image_duration=0.4, extra_duration=10):
+    """
+    Calculate the number of points to use based on the duration of the video
+    :param duration: duration of the video
+    :param image_duration: duration of each image
+    :param extra_duration: add extra duration to the video to allow for the car to stop at the destination
+    :return: number of points to use
+    """
     num_points = int((duration + extra_duration) / image_duration)
     return num_points
 
 
 def get_path_coordinates(destination, start_location="", num_points=10, api_key=""):
+    """
+    Get the coordinates of the path from the start location to the destination
+    :param destination:
+    :param start_location:
+    :param num_points:
+    :param api_key:
+    :return:
+    """
     if api_key == "":
         api_key = os.environ.get('GOOGLE_API_KEY')
 
@@ -109,6 +138,16 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
 
 
 def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_key="", crop_bottom=True, add_logo=False):
+    """
+    Fetch the street view images for the given path coordinates
+    :param path_coordinates: path coordinates
+    :param image_path: path to save the images
+    :param view: mobile or desktop
+    :param api_key: google api key
+    :param crop_bottom: crop the bottom of the image
+    :param add_logo: add a logo on top of the image
+    :return:
+    """
     if api_key == "":
         api_key = os.environ.get('GOOGLE_API_KEY')
 
@@ -156,10 +195,15 @@ def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_ke
                 if add_logo:
                     image = add_logo_on_top(image)
 
-                image.save(os.path.join(frames_folder,f"{i}.jpg"))
+                image.save(os.path.join(frames_folder, f"{i}.jpg"))
 
 
 def get_coordinates_from_city(city):
+    """
+    Get the coordinates of a city
+    :param city: city name
+    :return: returns the latitude and longitude of the city
+    """
     base_url = "https://nominatim.openstreetmap.org/search"
     params = {
         'q': city,
@@ -175,17 +219,27 @@ def get_coordinates_from_city(city):
     else:
         raise ConnectionError("Failed to connect to the Nominatim API.")
 
-def is_gray_image(image_data):
-    """Check if the image is predominantly gray."""
-    image = Image.open(BytesIO(image_data))
+
+def is_gray_image(image_path):
+    """
+    Check if the image is predominantly gray.
+    @param image_path: path to the image
+    """
+    image = Image.open(BytesIO(image_path))
     np_image = np.array(image)
 
     # Calculate the standard deviation of the color channels
     std_dev = np_image.std(axis=(0, 1))
     return all(x < 20 for x in std_dev)  # Threshold for grayness, might need adjustment
 
+
 def create_new_frames(data_dir="/var/data"):
-    with open(os.path.join(data_dir,"path_coordinates.pkl"), "rb") as f:
+    """
+    Create new frames
+    :param data_dir: path to the data directory
+    :return: void
+    """
+    with open(os.path.join(data_dir, "path_coordinates.pkl"), "rb") as f:
         path_coordinates = pickle.load(f)
     # Check if there is more than 100 files in the frames folder
     frames_path = os.path.join(data_dir, "frames")
@@ -197,7 +251,7 @@ def create_new_frames(data_dir="/var/data"):
     itr = 0
     while no_files < 100:
         fetch_street_view_images(path_coordinates, data_dir, "desktop")
-        no_files = len(os.listdir(os.path.join(data_dir,"frames")))
+        no_files = len(os.listdir(os.path.join(data_dir, "frames")))
         # if we have done this 10 times and still have less than 100 files, then we have a problem
         itr += 1
         if itr > 10:

@@ -26,6 +26,11 @@ def get_expiration_time():
 
 # Function to calculate the score
 def calculate_score(time_taken, video_file_path):
+    if time_taken <= 0:
+        raise ValueError("time_taken must be a positive number")
+    if not os.path.isfile(video_file_path):
+        raise ValueError("video_file_path is not a valid file path")
+
     with VideoFileClip(video_file_path) as video:
         video_duration = video.duration
 
@@ -34,7 +39,6 @@ def calculate_score(time_taken, video_file_path):
         return 0  # If the time taken is more than the video duration, return 0%
     else:
         return int(((video_duration - time_taken) / video_duration) * 100)
-
 def get_answer(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
@@ -52,29 +56,6 @@ def get_explanations(file_path):
         clues_and_explanations.append("💡 " + explanations[idx] + "<br><br>")
 
     return clues_and_explanations
-
-def save_high_score_to_json(user_name, score, file_name, add_if_existing=False):
-    # Load existing high scores
-    try:
-        with open(file_name, 'r') as file:
-            high_scores = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        high_scores = []
-
-    # Add the new score
-    if add_if_existing:
-        for entry in high_scores:
-            if entry['user_name'] == user_name:
-                entry['score'] += score
-                break
-        high_scores.append({'user_name': user_name, 'score': score})
-    else:
-        high_scores.append({'user_name': user_name, 'score': score})
-
-    # Save back to file
-    with open(file_name, 'w') as file:
-        json.dump(high_scores, file, indent=4)
-
 
 def remove_files_and_folders(folder_path):
     # Check each item in the folder
