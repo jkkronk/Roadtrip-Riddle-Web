@@ -7,6 +7,14 @@ import os
 
 
 async def generate_audio_chunk(client, voice, chunk, nr):
+    """
+    Generate audio for a chunk of text.
+    :param client: client
+    :param voice: what voice to use
+    :param chunk: chunk of text
+    :param nr: nr of chunk
+    :return:
+    """
     response = await client.audio.speech.create(
         model="tts-1",
         voice=voice,
@@ -22,6 +30,13 @@ async def generate_audio_chunk(client, voice, chunk, nr):
 
 
 async def quiz_2_speech_openai(quiz, voice, openai_api_key=""):
+    """
+    Generate audio for a quiz.
+    :param quiz: quiz class
+    :param voice: what voice to use
+    :param openai_api_key: api key
+    :return:
+    """
     if openai_api_key == "":
         client = AsyncOpenAI()
     else:
@@ -66,6 +81,13 @@ async def quiz_2_speech_openai(quiz, voice, openai_api_key=""):
 
 
 async def text_2_speech_openai(text, voice, openai_api_key=""):
+    """
+    Generate audio for a text.
+    :param text: text to generate audio for
+    :param voice: what voice to use
+    :param openai_api_key: api key
+    :return:
+    """
     if openai_api_key == "":
         client = AsyncOpenAI()
     else:

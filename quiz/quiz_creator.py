@@ -11,6 +11,9 @@ from quiz import street_view_collector
 from quiz import audio_creator
 
 class QuizHost():
+    """
+    A class that represents a quiz host.
+    """
     intro: str = Field(..., description="The introduction of the quiz.")
     outro: str = Field(..., description="The outro of the quiz.")
 
@@ -20,25 +23,56 @@ class QuizHost():
         self.outro = outro
 
 class QuizClues(BaseModel):
+    """
+    A class that represents the clues for a quiz.
+    """
     clues: list[str] = Field(..., description="A list of size 5 with clues for the quiz.")
     explanations: list[str] = Field(..., description="A list of size 5 with explanations for the clues.")
 
     def clear_city(self):
+        """
+        Replace the city name with "the city" in all clues.
+        :return:
+        """
         self.clues = [clue.replace("Zurich", "the city") for clue in self.clues]
 
     def get_clue(self, round: int) -> str:
+        """
+        Get the clue for a specific round.
+        :param round:
+        :return:
+        """
         return self.clues[round]
 
     def get_explanation(self, round: int) -> str:
+        """
+        Get the explanation for a specific round.
+        :param round:
+        :return:
+        """
         return self.explanations[round]
 
     def get_all_clues(self):
+        """
+        Get all the clues as a string.
+        :return:
+        """
         return "\n".join(self.clues)
 
     def get_all_explanation(self) -> str:
+        """
+        Get all the explanations as a string.
+        :return:
+        """
         return "\n".join(self.explanations)
 
     def save(self, city, file_path: str):
+        """
+        Save the clues and explanations to a json file.
+        :param city: city name
+        :param file_path: path to the json file
+        :return: void
+        """
         data = {
             "city": city,
             "clues": self.clues,
@@ -49,11 +83,22 @@ class QuizClues(BaseModel):
 
     @classmethod
     def open(cls, file_path: str):
+        """
+        Open a json file with clues and explanations.
+        :param file_path: path to the json file
+        :return:
+        """
         with open(file_path, 'r') as file:
             data = json.load(file)
             return cls(clues=data['clues'], explanations=data['explanations'])
 
 def random_destination(data_path) -> str:
+    """
+    Get a random destination from the cities text file.
+    :param data_path: path to the cities text file
+    :return: city name
+    """
+
     # open the cities text file and pick a random city
     # return the city
     path_to_cities = os.path.join("./static", "cities.txt")
@@ -71,6 +116,12 @@ def random_destination(data_path) -> str:
     return random_city.replace("\n", "")
 
 def create_quiz(city:str, openai_api_key="") -> QuizClues:
+    """
+    Create a quiz for a city.
+    :param city: city name
+    :param openai_api_key: openai api key
+    :return:
+    """
     if openai_api_key == "":
         client = instructor.patch(OpenAI())
     else:
@@ -129,6 +180,12 @@ def create_quiz(city:str, openai_api_key="") -> QuizClues:
 
 
 def create_new_quiz(data_dir="/var/data/", city=""):
+    """
+    Create a new quiz.
+    :param data_dir: path to the data directory
+    :param city: city name
+    :return:
+    """
     path_coordinates = []
     while len(path_coordinates) == 0:
         # Create a new quiz

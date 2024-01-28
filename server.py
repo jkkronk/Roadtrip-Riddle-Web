@@ -1,5 +1,4 @@
 import time
-import datetime
 import os
 from flask import Flask, request, render_template, redirect, url_for, session, send_file, make_response
 from flask_sqlalchemy import SQLAlchemy
@@ -37,14 +36,19 @@ google = oauth.remote_app(
 )
 
 
-# Route for the home page
 @app.route('/', methods=['GET', 'POST'])
 def home():
+    """
+    Home page
+    """
     return render_template('home.html')
 
 
 @app.route('/get_video')
 def get_video():
+    """
+    Get the video file
+    """
     video_path = f"{os.environ.get('RR_DATA_PATH')}quiz.mp4"
     return send_file(video_path, as_attachment=True)
 
@@ -52,6 +56,9 @@ def get_video():
 # Route for the video page
 @app.route('/video')
 def video():
+    """
+    Video page
+    """
     # Check if the user has a valid cookie
     if request.cookies.get('played_today'):
         # Redirect to score if they've already played today
@@ -65,6 +72,9 @@ def video():
 
 @app.route('/high_scores')
 def high_scores():
+    """
+    High scores page
+    """
     daily_scores = HighScore.query.order_by(HighScore.daily_score.desc()).all()
     all_time_high_scores = HighScore.query.order_by(HighScore.total_score.desc()).all()
     return render_template('high_scores.html', all_time_high_scores=all_time_high_scores,
@@ -73,11 +83,17 @@ def high_scores():
 
 @app.route('/info')
 def info():
+    """
+    Info page
+    """
     return render_template('info.html')
 
 
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():
+    """
+    Handle the answer submission
+    """
     video_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.mp4")
     start_time = float(request.form['start_time'])
     end_time = time.time()
@@ -95,6 +111,9 @@ def submit_answer():
 # Route for the score page
 @app.route('/score')
 def score():
+    """
+    Score page
+    """
     score = session.get('latest_score', 0)  # Default to 0 if not found in session
     daily_scores = HighScore.query.order_by(HighScore.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
@@ -104,12 +123,18 @@ def score():
 
 @app.route('/login')
 def login():
+    """
+    Sends the user to the google login page
+    """
     session['score_to_submit'] = request.args.get('score')
     return google.authorize(callback=url_for('authorized', _external=True))
 
 
 @app.route('/login/authorized')
 def authorized():
+    """
+    Handles the google login callback
+    """
     resp = google.authorized_response()
     if resp is None or resp.get('access_token') is None:
         # Handle the error appropriately
@@ -128,6 +153,9 @@ def authorized():
 
 @app.route('/submit_score')
 def submit_score():
+    """
+    Submit the score to the database
+    """
     if 'google_token' not in session:
         return redirect(url_for('login'))
 
@@ -157,6 +185,9 @@ def submit_score():
 
 @app.route('/submit_username', methods=['POST'])
 def submit_username():
+    """
+    Submit the username to the database
+    """
     google_user_id = request.form['google_user_id']
     username = request.form['username']
     score = session.pop('temp_score', 0)  # Default to 0 if not found
@@ -172,37 +203,56 @@ def submit_username():
 
 @app.route('/already_submitted')
 def already_submitted():
+    """
+    Page for when the user has already submitted a score today
+    """
     return render_template('already_submitted.html')
 
 
 class HighScore(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    google_user_id = db.Column(db.String(100))
-    user_name = db.Column(db.String(50))
-    daily_score = db.Column(db.Integer)
-    total_score = db.Column(db.Integer)
+    """
+    High score model
+    """
+    id = db.Column(db.Integer, primary_key=True)  # User ID
+    google_user_id = db.Column(db.String(100))  # Google User ID
+    user_name = db.Column(db.String(50))  # User name
+    daily_score = db.Column(db.Integer)  # Daily score
+    total_score = db.Column(db.Integer)  # Total score
 
     def __repr__(self):
         return '<HighScore %r>' % self.user_name
 
 
+# Create the database tables
 with app.app_context():
     db.create_all()
 
 
 @app.route('/explanations')
 def explanations():
+    """
+    Explanations page
+    """
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     return render_template('explanations.html', explanations=utils.get_explanations(quiz_path))
 
 
 @google.tokengetter
 def get_google_oauth_token():
+    """
+    Get the google oauth token
+    """
     return session.get('google_token')
 
 
 @auth.verify_password
 def verify_password(username, password):
+    """
+    Verify the username and password
+    :param username:
+    :param password:
+    :return:
+    """
     if username in users and users[username] == password:
         return username
 
@@ -210,6 +260,9 @@ def verify_password(username, password):
 @app.route('/clear_highscore')
 @auth.login_required
 def clear_highscore():
+    """
+    Clear the high scores
+    """
     with app.app_context():  # This line creates the application context
         try:
             # Reset daily scores for all users
@@ -224,6 +277,9 @@ def clear_highscore():
 @app.route('/clear_quiz')
 @auth.login_required
 def clear_quiz():
+    """
+    Clear the quiz
+    """
     utils.remove_files_and_folders(os.environ.get('RR_DATA_PATH'))
     return "Quiz cleared!"
 
@@ -231,6 +287,9 @@ def clear_quiz():
 @app.route('/new_quiz')
 @auth.login_required
 def new_quiz():
+    """
+    Create a new quiz
+    """
     quiz_creator.create_new_quiz(os.environ.get('RR_DATA_PATH'))
     return "Quiz created!"
 
@@ -238,6 +297,9 @@ def new_quiz():
 @app.route('/new_frames')
 @auth.login_required
 def new_frames():
+    """
+    Create new frames
+    """
     street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
     return "Frames created!"
 
@@ -245,6 +307,9 @@ def new_frames():
 @app.route('/new_video')
 @auth.login_required
 def new_video():
+    """
+    Create a new video
+    """
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
 

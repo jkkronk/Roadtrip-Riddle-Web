@@ -11,6 +11,11 @@ Here is the app deployed on render: https://roadtrip-riddle.onrender.com
 
 
 ## Installation
+```bash
+git clone
+cd quiz-game
+pip3 install -r requirements.txt
+```
 
 ## Usage
 ```bash
@@ -30,5 +35,13 @@ curl admin::password http://localhost:5000/new_quiz
 curl admin::password http://localhost:5000/new_frames
 curl admin::password http://localhost:5000/new_video
 curl admin::password http://localhost:5000/clear_highscore 
+```
+
+## Testing
+At the moment there is only some tests implemented. The test only test util functions. No tests are done functions or 
+classes with api calls. 
+
+```bash
+python3 -m unittest discover -s tests
 ```
 
