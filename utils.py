@@ -4,6 +4,9 @@ import os
 import shutil
 from datetime import datetime, timedelta, time
 import pytz
+import re
+from server import User, GameScore, db
+from sqlalchemy import func
 
 
 def get_expiration_time():
@@ -99,3 +102,38 @@ def remove_files_and_folders(folder_path):
         # If the item is a directory, remove the directory and its contents
         elif os.path.isdir(item_path):
             shutil.rmtree(item_path)
+
+
+def is_valid_username(username):
+    """
+    Check if the username is valid. It should contain only letters and numbers (QWERTY characters)
+    and be between 3 and 20 characters long.
+
+    :param username: The username to validate.
+    :return: True if the username is valid, False otherwise.
+    """
+    # Regular expression for a username: only letters and numbers, 1-20 characters long
+    pattern = re.compile("^[a-zA-Z0-9_]{1,20}$")
+
+    # Check if the username matches the pattern
+    return bool(pattern.match(username))
+
+
+def get_last_month_high_scores():
+    """
+    Get the total scores for each user over the last month.
+    """
+    one_month_ago = datetime.utcnow() - timedelta(days=30)
+
+    # Query to sum scores for each user over the last month
+    scores = db.session.query(
+        GameScore.user_id,
+        func.sum(GameScore.score).label('total_score')
+    ).filter(GameScore.played_at >= one_month_ago) \
+        .group_by(GameScore.user_id) \
+        .order_by(func.sum(GameScore.score).desc())
+
+    # Create a list of tuples (user_id, total_score)
+    high_scores = [(score.user_id, score.total_score) for score in scores]
+
+    return high_scores

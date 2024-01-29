@@ -4,7 +4,7 @@ from flask import Flask, request, render_template, redirect, url_for, session, s
 from flask_sqlalchemy import SQLAlchemy
 from flask_oauthlib.client import OAuth
 from flask_httpauth import HTTPBasicAuth
-
+from datetime import datetime
 import utils
 from quiz import quiz_creator, street_view_collector, video_creator
 
@@ -75,9 +75,9 @@ def high_scores():
     """
     High scores page
     """
-    daily_scores = HighScore.query.order_by(HighScore.daily_score.desc()).all()
-    all_time_high_scores = HighScore.query.order_by(HighScore.total_score.desc()).all()
-    return render_template('high_scores.html', all_time_high_scores=all_time_high_scores,
+    daily_scores = User.query.order_by(User.daily_score.desc()).all()
+    monthly_high_scores = utils.get_last_month_high_scores()
+    return render_template('high_scores.html', monthly_high_scores=monthly_high_scores,
                            daily_high_scores=daily_scores)
 
 
@@ -98,8 +98,8 @@ def submit_answer():
     start_time = float(request.form['start_time'])
     end_time = time.time()
     time_taken = end_time - start_time
-    score = utils.calculate_score(time_taken, video_path)
-    session['latest_score'] = score
+    daily_score = utils.calculate_score(time_taken, video_path)
+    session['latest_score'] = daily_score
 
     # Set a cookie that expires in 24 hours
     resp = make_response(redirect(url_for('score')))
@@ -115,7 +115,7 @@ def score():
     Score page
     """
     score = session.get('latest_score', 0)  # Default to 0 if not found in session
-    daily_scores = HighScore.query.order_by(HighScore.daily_score.desc()).all()
+    daily_scores = User.query.order_by(User.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     correct_answer = utils.get_answer(quiz_path)
     return render_template('score.html', score=score, daily_high_scores=daily_scores, correct_answer=correct_answer)
@@ -159,21 +159,23 @@ def submit_score():
     if 'google_token' not in session:
         return redirect(url_for('login'))
 
-    score = request.args.get('score')
+    daily_score = request.args.get('score')
     user_info = google.get('userinfo').data
     google_user_id = user_info.get('id')
 
-    existing = HighScore.query.filter_by(google_user_id=google_user_id).first()
+    existing_user = User.query.filter_by(google_user_id=google_user_id).first()
 
-    if existing and existing.daily_score != -1:
+    if existing_user and existing_user.daily_score != -1:
         # User already submitted a score today
         return redirect(url_for('already_submitted'))  # Redirect or handle as needed
     else:
         # Either no score submitted today or score is -1
-        if existing:
+        if existing_user:
             # Update existing score
-            existing.daily_score = score
-            existing.total_score += int(score)
+            existing_user.daily_score = daily_score
+            new_game_score = GameScore(score=score, user_id=existing_user.id)
+            db.session.add(new_game_score)
+            db.session.commit()
         else:
             session['temp_score'] = request.args.get('score')
             return render_template('enter_username.html', google_user_id=google_user_id)
@@ -190,18 +192,23 @@ def submit_username():
     google_user_id = request.form['google_user_id']
     username = request.form['username']
 
-    # Check if username is good. Ie. not existing in database and not empty
-    existing = HighScore.query.filter_by(user_name=username).first()
+    # Check if username is good. Ie. not existing in database and not empty. Check if username has valid qwerty characters.
+    existing = User.query.filter_by(user_name=username).first()
     if existing:
-        return render_template('enter_username.html', google_user_id=google_user_id, error="Please enter a username")
-    elif username == "":
-        return render_template('enter_username.html', google_user_id=google_user_id, error=f"You can't be named: {username}")
+        return render_template('enter_username.html', google_user_id=google_user_id, error="Username already exists!")
+    elif not utils.is_valid_username(username):
+        return render_template('enter_username.html', google_user_id=google_user_id, error="Username must only contain maximum 20 letters or numbers!")
 
-    score = session.pop('temp_score', 0)  # Default to 0 if not found
+    first_score = session.pop('temp_score', 0)  # Default to 0 if not found
 
     # Create new score entry with the username
-    new_score = HighScore(google_user_id=google_user_id, user_name=username, daily_score=score, total_score=score)
-    db.session.add(new_score)
+    new_user = User(google_user_id=google_user_id, user_name=username, daily_score=first_score)
+    db.session.add(new_user)
+    db.session.commit()
+
+    # Create new score entry for the user
+    new_game_score = GameScore(score=score, user_id=new_user.id)
+    db.session.add(new_game_score)
     db.session.commit()
 
     # Redirect to the appropriate page after username submission
@@ -216,7 +223,7 @@ def already_submitted():
     return render_template('already_submitted.html')
 
 
-class HighScore(db.Model):
+class User(db.Model):
     """
     High score model
     """
@@ -224,11 +231,19 @@ class HighScore(db.Model):
     google_user_id = db.Column(db.String(100))  # Google User ID
     user_name = db.Column(db.String(50))  # User name
     daily_score = db.Column(db.Integer)  # Daily score
-    total_score = db.Column(db.Integer)  # Total score
+    scores = db.relationship('GameScore', backref='user', lazy=True)
+
 
     def __repr__(self):
         return '<HighScore %r>' % self.user_name
 
+class GameScore(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    score = db.Column(db.Integer, nullable=False)
+    played_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Foreign Key to link scores to a specific user
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 # Create the database tables
 with app.app_context():
@@ -264,21 +279,21 @@ def verify_password(username, password):
         return username
 
 
-@app.route('/clear_highscore')
+@app.route('/clear_daily_highscore')
 @auth.login_required
-def clear_highscore():
+def clear_daily_highscore():
     """
     Clear the high scores
     """
     with app.app_context():  # This line creates the application context
         try:
             # Reset daily scores for all users
-            HighScore.query.update({HighScore.daily_score: -1})
+            User.query.update({User.daily_score: -1})
             db.session.commit()
         except Exception as e:
             print("Error resetting daily high scores:", e)
             db.session.rollback()
-    return "Highscores cleared!"
+    return "Daily highscores cleared!"
 
 
 @app.route('/clear_quiz')
@@ -303,20 +318,11 @@ def new_quiz():
 
 @app.route('/new_frames')
 @auth.login_required
-def new_frames():
+def new_video():
     """
     Create new frames
     """
     street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
-    return "Frames created!"
-
-
-@app.route('/new_video')
-@auth.login_required
-def new_video():
-    """
-    Create a new video
-    """
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
 
