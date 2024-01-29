@@ -92,7 +92,7 @@
                     <th>User</th>
                     <th>Score</th>
                 </tr>
-                {% for score in all_time_high_scores %}
+                {% for score in monthly_high_scores %}
                 {% if score.total_score is not none and score.total_score >= 0 %}
                 <tr>
                     <td>{{ score.user_name }}</td>
