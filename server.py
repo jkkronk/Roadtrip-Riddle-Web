@@ -2,15 +2,17 @@ import time
 import os
 from flask import Flask, request, render_template, redirect, url_for, session, send_file, make_response
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from flask_oauthlib.client import OAuth
 from flask_httpauth import HTTPBasicAuth
-from datetime import datetime
-import utils
+from datetime import datetime, timedelta, time
+
+from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, remove_files_and_folders
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
-#app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 
@@ -66,7 +68,7 @@ def video():
 
     # Rest of your existing code
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
-    correct_answer = utils.get_answer(quiz_path)
+    correct_answer = get_answer(quiz_path)
     return render_template('video.html', correct_answer=correct_answer)
 
 
@@ -76,7 +78,7 @@ def high_scores():
     High scores page
     """
     daily_scores = User.query.order_by(User.daily_score.desc()).all()
-    monthly_high_scores = utils.get_last_month_high_scores()
+    monthly_high_scores = get_last_month_high_scores()
     return render_template('high_scores.html', monthly_high_scores=monthly_high_scores,
                            daily_high_scores=daily_scores)
 
@@ -98,12 +100,12 @@ def submit_answer():
     start_time = float(request.form['start_time'])
     end_time = time.time()
     time_taken = end_time - start_time
-    daily_score = utils.calculate_score(time_taken, video_path)
+    daily_score = calculate_score(time_taken, video_path)
     session['latest_score'] = daily_score
 
     # Set a cookie that expires in 24 hours
     resp = make_response(redirect(url_for('score')))
-    expiration_datetime = utils.get_expiration_time()
+    expiration_datetime = get_expiration_time()
     resp.set_cookie('played_today', 'true', expires=expiration_datetime)
     return resp
 
@@ -117,7 +119,7 @@ def score():
     score = session.get('latest_score', 0)  # Default to 0 if not found in session
     daily_scores = User.query.order_by(User.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
-    correct_answer = utils.get_answer(quiz_path)
+    correct_answer = get_answer(quiz_path)
     return render_template('score.html', score=score, daily_high_scores=daily_scores, correct_answer=correct_answer)
 
 
@@ -196,7 +198,7 @@ def submit_username():
     existing = User.query.filter_by(user_name=username).first()
     if existing:
         return render_template('enter_username.html', google_user_id=google_user_id, error="Username already exists!")
-    elif not utils.is_valid_username(username):
+    elif not is_valid_username(username):
         return render_template('enter_username.html', google_user_id=google_user_id, error="Username must only contain maximum 20 letters or numbers!")
 
     first_score = session.pop('temp_score', 0)  # Default to 0 if not found
@@ -256,7 +258,7 @@ def explanations():
     Explanations page
     """
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
-    return render_template('explanations.html', explanations=utils.get_explanations(quiz_path))
+    return render_template('explanations.html', explanations=get_explanations(quiz_path))
 
 
 @google.tokengetter
@@ -302,7 +304,7 @@ def clear_quiz():
     """
     Clear the quiz
     """
-    utils.remove_files_and_folders(os.environ.get('RR_DATA_PATH'))
+    remove_files_and_folders(os.environ.get('RR_DATA_PATH'))
     return "Quiz cleared!"
 
 
@@ -326,6 +328,22 @@ def new_video():
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
 
+def get_last_month_high_scores():
+    """
+    Get the total scores for each user over the last month.
+    """
+    one_month_ago = datetime.utcnow() - timedelta(days=30)
+
+    # Query to sum scores for each user over the last month
+    scores = db.session.query(
+        GameScore.user_id,
+        func.sum(GameScore.score).label('total_score')
+    ).filter(GameScore.played_at >= one_month_ago) \
+        .group_by(GameScore.user_id) \
+        .order_by(func.sum(GameScore.score).desc())
+
+    # Create a list of tuples (user_id, total_score)
+    return [(score.user_id, score.total_score) for score in scores]
 
 if __name__ == '__main__':
     app.run(debug=False)
