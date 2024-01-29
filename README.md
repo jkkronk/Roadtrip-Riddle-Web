@@ -25,7 +25,9 @@ export FLASK_PASSWORD=your_password
 export GOOGLE_OAUTH_KEY=your_key
 export GOOGLE_OAUTH_SECRET=your_secret
 export FLASK_APP=server.py
-flash run
+export GOOGLE_API_KEY=your_key
+export OPENAI_API_KEY=your_key
+gunicorn --timeout 600 server:app
 ```
 
 The riddles can be updated by calling the following url:

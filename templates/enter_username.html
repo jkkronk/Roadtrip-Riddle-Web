@@ -87,12 +87,16 @@
 </head>
 <body>
      <div class="score-container">
-        <h1>Welcome to Score Tracker!</h1>
+        <h1>Username:</h1>
+
         <p>
             Congratulations on submitting your first score! <br>
             To keep track of your scores, please set a username. <br>
-            This username will be used to display your scores on the leaderboard.
+            This username will be used to display your scores on the leaderboard to the public.
         </p>
+        {% if error %}
+            <div style="color: red;">{{ error }}</div>
+        {% endif %}
         <form action="{{ url_for('submit_username') }}" method="post">
             <input type="hidden" name="google_user_id" value="{{ google_user_id }}">
             <div>

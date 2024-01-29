@@ -9,8 +9,8 @@ import utils
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+#app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 
@@ -162,7 +162,6 @@ def submit_score():
     score = request.args.get('score')
     user_info = google.get('userinfo').data
     google_user_id = user_info.get('id')
-    user_name = user_info.get('name', 'Unknown User')
 
     existing = HighScore.query.filter_by(google_user_id=google_user_id).first()
 
@@ -190,6 +189,14 @@ def submit_username():
     """
     google_user_id = request.form['google_user_id']
     username = request.form['username']
+
+    # Check if username is good. Ie. not existing in database and not empty
+    existing = HighScore.query.filter_by(user_name=username).first()
+    if existing:
+        return render_template('enter_username.html', google_user_id=google_user_id, error="Please enter a username")
+    elif username == "":
+        return render_template('enter_username.html', google_user_id=google_user_id, error=f"You can't be named: {username}")
+
     score = session.pop('temp_score', 0)  # Default to 0 if not found
 
     # Create new score entry with the username
