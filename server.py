@@ -177,7 +177,6 @@ def submit_score():
             existing_user.daily_score = daily_score
             new_game_score = GameScore(score=score, user_id=existing_user.id)
             db.session.add(new_game_score)
-            db.session.commit()
         else:
             session['temp_score'] = request.args.get('score')
             return render_template('enter_username.html', google_user_id=google_user_id)
@@ -206,11 +205,12 @@ def submit_username():
     # Create new score entry with the username
     new_user = User(google_user_id=google_user_id, user_name=username, daily_score=first_score)
     db.session.add(new_user)
-    db.session.commit()
 
     # Create new score entry for the user
     new_game_score = GameScore(score=score, user_id=new_user.id)
     db.session.add(new_game_score)
+
+    # commit both changes to the database
     db.session.commit()
 
     # Redirect to the appropriate page after username submission
@@ -227,7 +227,7 @@ def already_submitted():
 
 class User(db.Model):
     """
-    High score model
+    User model
     """
     id = db.Column(db.Integer, primary_key=True)  # User ID
     google_user_id = db.Column(db.String(100))  # Google User ID
@@ -240,6 +240,9 @@ class User(db.Model):
         return '<HighScore %r>' % self.user_name
 
 class GameScore(db.Model):
+    """
+    Game score model
+    """
     id = db.Column(db.Integer, primary_key=True)
     score = db.Column(db.Integer, nullable=False)
     played_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
