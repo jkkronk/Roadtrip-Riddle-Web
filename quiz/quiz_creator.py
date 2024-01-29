@@ -206,7 +206,7 @@ def create_new_quiz(data_dir="/var/data/", city=""):
 
         # Create the video
         duration = sound.duration_seconds
-        num_points = street_view_collector.duration_to_num_points(duration, extra_duration=10) # 10 extra seconds
+        num_points = street_view_collector.duration_to_num_points(duration, extra_duration=30)
 
         for i in range(50):
             print(f"Attempt {i} to get a path with {num_points} points")
