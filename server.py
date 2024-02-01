@@ -6,13 +6,13 @@ from sqlalchemy import func
 from flask_oauthlib.client import OAuth
 from flask_httpauth import HTTPBasicAuth
 from datetime import datetime, timedelta, time
-
+import time
 from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, remove_files_and_folders
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+#app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 
@@ -51,7 +51,7 @@ def get_video():
     """
     Get the video file
     """
-    video_path = f"{os.environ.get('RR_DATA_PATH')}quiz.mp4"
+    video_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.mp4")
     return send_file(video_path, as_attachment=True)
 
 
@@ -205,12 +205,11 @@ def submit_username():
     # Create new score entry with the username
     new_user = User(google_user_id=google_user_id, user_name=username, daily_score=first_score)
     db.session.add(new_user)
+    db.session.commit()
 
     # Create new score entry for the user
-    new_game_score = GameScore(score=score, user_id=new_user.id)
+    new_game_score = GameScore(score=first_score, user_id=new_user.id)
     db.session.add(new_game_score)
-
-    # commit both changes to the database
     db.session.commit()
 
     # Redirect to the appropriate page after username submission
@@ -321,11 +320,11 @@ def new_quiz():
     return "Quiz created!"
 
 
-@app.route('/new_frames')
+@app.route('/new_video')
 @auth.login_required
 def new_video():
     """
-    Create new frames
+    Create new video from the quiz
     """
     street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
