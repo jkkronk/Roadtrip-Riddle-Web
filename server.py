@@ -116,11 +116,11 @@ def score():
     """
     Score page
     """
-    score = session.get('latest_score', 0)  # Default to 0 if not found in session
+    user_score = session.get('latest_score', 0)  # Default to 0 if not found in session
     daily_scores = User.query.order_by(User.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     correct_answer = get_answer(quiz_path)
-    return render_template('score.html', score=score, daily_high_scores=daily_scores, correct_answer=correct_answer)
+    return render_template('score.html', score=user_score, daily_high_scores=daily_scores, correct_answer=correct_answer)
 
 
 @app.route('/login')
@@ -337,7 +337,7 @@ def get_last_month_high_scores():
     one_month_ago = datetime.utcnow() - timedelta(days=30)
 
     # Query to sum scores for each user over the last month
-    scores = db.session.query(
+    users = db.session.query(
         GameScore.user_id,
         func.sum(GameScore.score).label('total_score')
     ).filter(GameScore.played_at >= one_month_ago) \
@@ -345,7 +345,7 @@ def get_last_month_high_scores():
         .order_by(func.sum(GameScore.score).desc())
 
     # Create a list of tuples (user_id, total_score)
-    return [(score.user_id, score.total_score) for score in scores]
+    return users.all()
 
 if __name__ == '__main__':
     app.run(debug=False)
