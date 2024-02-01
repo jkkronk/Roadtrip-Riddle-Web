@@ -6,13 +6,14 @@ from sqlalchemy import func
 from flask_oauthlib.client import OAuth
 from flask_httpauth import HTTPBasicAuth
 from datetime import datetime, timedelta, time
-
-from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, remove_files_and_folders
+import time
+from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, \
+    remove_files_and_folders
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 
@@ -51,7 +52,7 @@ def get_video():
     """
     Get the video file
     """
-    video_path = f"{os.environ.get('RR_DATA_PATH')}quiz.mp4"
+    video_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.mp4")
     return send_file(video_path, as_attachment=True)
 
 
@@ -116,11 +117,12 @@ def score():
     """
     Score page
     """
-    score = session.get('latest_score', 0)  # Default to 0 if not found in session
+    user_score = session.get('latest_score', 0)  # Default to 0 if not found in session
     daily_scores = User.query.order_by(User.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     correct_answer = get_answer(quiz_path)
-    return render_template('score.html', score=score, daily_high_scores=daily_scores, correct_answer=correct_answer)
+    return render_template('score.html', score=user_score, daily_high_scores=daily_scores,
+                           correct_answer=correct_answer)
 
 
 @app.route('/login')
@@ -198,20 +200,19 @@ def submit_username():
     if existing:
         return render_template('enter_username.html', google_user_id=google_user_id, error="Username already exists!")
     elif not is_valid_username(username):
-        return render_template('enter_username.html', google_user_id=google_user_id, error="Username must only contain maximum 20 letters or numbers!")
+        return render_template('enter_username.html', google_user_id=google_user_id,
+                               error="Username must only contain maximum 20 letters or numbers!")
 
     first_score = session.pop('temp_score', 0)  # Default to 0 if not found
 
     # Create new score entry with the username
     new_user = User(google_user_id=google_user_id, user_name=username, daily_score=first_score)
     db.session.add(new_user)
-    db.session.flush()  # This commits the user but keeps the transaction open
+    db.session.commit()
 
     # Create new score entry for the user
     new_game_score = GameScore(score=first_score, user_id=new_user.id)
     db.session.add(new_game_score)
-
-    # commit both changes to the database
     db.session.commit()
 
     # Redirect to the appropriate page after username submission
@@ -236,9 +237,9 @@ class User(db.Model):
     daily_score = db.Column(db.Integer)  # Daily score
     scores = db.relationship('GameScore', backref='user', lazy=True)
 
-
     def __repr__(self):
         return '<HighScore %r>' % self.user_name
+
 
 class GameScore(db.Model):
     """
@@ -250,6 +251,7 @@ class GameScore(db.Model):
 
     # Foreign Key to link scores to a specific user
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
 
 # Create the database tables
 with app.app_context():
@@ -322,15 +324,16 @@ def new_quiz():
     return "Quiz created!"
 
 
-@app.route('/new_frames')
+@app.route('/new_video')
 @auth.login_required
 def new_video():
     """
-    Create new frames
+    Create new video from the quiz
     """
     street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
+
 
 def get_last_month_high_scores():
     """
@@ -339,7 +342,7 @@ def get_last_month_high_scores():
     one_month_ago = datetime.utcnow() - timedelta(days=30)
 
     # Query to sum scores for each user over the last month
-    scores = db.session.query(
+    users = db.session.query(
         GameScore.user_id,
         func.sum(GameScore.score).label('total_score')
     ).filter(GameScore.played_at >= one_month_ago) \
@@ -347,7 +350,8 @@ def get_last_month_high_scores():
         .order_by(func.sum(GameScore.score).desc())
 
     # Create a list of tuples (user_id, total_score)
-    return [(score.user_id, score.total_score) for score in scores]
+    return users.all()
+
 
 if __name__ == '__main__':
     app.run(debug=False)

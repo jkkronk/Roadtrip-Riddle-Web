@@ -246,10 +246,10 @@ def create_new_frames(data_dir="/var/data"):
     # Check if the frames folder exists, and create it if it doesn't
     if not os.path.exists(frames_path):
         os.makedirs(frames_path)
-    no_files = len(os.listdir(frames_path))
 
     itr = 0
-    while nbr_files < path_coordinates*0.5:
+    nbr_files = 0
+    while nbr_files < len(path_coordinates)*0.5:
         fetch_street_view_images(path_coordinates, data_dir, "desktop")
         nbr_files = len(os.listdir(os.path.join(data_dir, "frames")))
         # if we have done this 10 times and still have less than 100 files, then we have a problem
