@@ -7,11 +7,12 @@ from flask_oauthlib.client import OAuth
 from flask_httpauth import HTTPBasicAuth
 from datetime import datetime, timedelta, time
 import time
-from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, remove_files_and_folders
+from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, \
+    remove_files_and_folders
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
-#app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
+# app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
@@ -120,7 +121,8 @@ def score():
     daily_scores = User.query.order_by(User.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     correct_answer = get_answer(quiz_path)
-    return render_template('score.html', score=user_score, daily_high_scores=daily_scores, correct_answer=correct_answer)
+    return render_template('score.html', score=user_score, daily_high_scores=daily_scores,
+                           correct_answer=correct_answer)
 
 
 @app.route('/login')
@@ -198,7 +200,8 @@ def submit_username():
     if existing:
         return render_template('enter_username.html', google_user_id=google_user_id, error="Username already exists!")
     elif not is_valid_username(username):
-        return render_template('enter_username.html', google_user_id=google_user_id, error="Username must only contain maximum 20 letters or numbers!")
+        return render_template('enter_username.html', google_user_id=google_user_id,
+                               error="Username must only contain maximum 20 letters or numbers!")
 
     first_score = session.pop('temp_score', 0)  # Default to 0 if not found
 
@@ -234,9 +237,9 @@ class User(db.Model):
     daily_score = db.Column(db.Integer)  # Daily score
     scores = db.relationship('GameScore', backref='user', lazy=True)
 
-
     def __repr__(self):
         return '<HighScore %r>' % self.user_name
+
 
 class GameScore(db.Model):
     """
@@ -248,6 +251,7 @@ class GameScore(db.Model):
 
     # Foreign Key to link scores to a specific user
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
 
 # Create the database tables
 with app.app_context():
@@ -330,6 +334,7 @@ def new_video():
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
 
+
 def get_last_month_high_scores():
     """
     Get the total scores for each user over the last month.
@@ -346,6 +351,7 @@ def get_last_month_high_scores():
 
     # Create a list of tuples (user_id, total_score)
     return users.all()
+
 
 if __name__ == '__main__':
     app.run(debug=False)
