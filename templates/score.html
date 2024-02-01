@@ -185,10 +185,10 @@
 
     <script>
         document.getElementById("shareButton").addEventListener("click", function() {
-            var score = "{{ score }}"; // Assume score is a number between 0 and 100
+            var score = "{{ score }}";
             var carCount = Math.round(score / 10); // Calculate number of 🚘 symbols
             var dashCount = 10 - carCount; // Calculate number of ➖ symbols
-            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " Try to beat me! roadtrip-riddle.onrender.com";
+            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " " + score + " Points, Try to beat me! roadtrip-riddle.onrender.com";
 
             navigator.clipboard.writeText(shareMessage)
             .then(() => {
@@ -203,16 +203,16 @@
             var score = "{{ score }}";
             var carCount = Math.round(score / 10); // Calculate number of 🚘 symbols
             var dashCount = 10 - carCount; // Calculate number of ➖ symbols
-            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " Try to beat me! roadtrip-riddle.onrender.com";
+            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " " + score + " Points, try to beat me! roadtrip-riddle.onrender.com";
             var whatsappUrl = "https://api.whatsapp.com/send/?text=" + encodeURIComponent(shareMessage);
             window.open(whatsappUrl, '_blank'); // Open the link in a new tab/window
         });
 
         document.addEventListener("DOMContentLoaded", function() {
-            var score = "{{ score }}"; // Assume score is dynamically rendered by your server-side template
+            var score = "{{ score }}";
             var carCount = Math.round(score / 10); // Calculate number of 🚘 symbols
             var dashCount = 10 - carCount; // Calculate number of ➖ symbols
-            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " Try to beat me! roadtrip-riddle.onrender.com";
+            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " " + score + " Points, try to beat me! roadtrip-riddle.onrender.com";
             var twitterShareUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareMessage);
 
             document.getElementById("twitterShare").setAttribute("href", twitterShareUrl);
