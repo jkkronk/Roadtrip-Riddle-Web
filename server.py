@@ -205,9 +205,10 @@ def submit_username():
     # Create new score entry with the username
     new_user = User(google_user_id=google_user_id, user_name=username, daily_score=first_score)
     db.session.add(new_user)
+    db.session.flush()  # This commits the user but keeps the transaction open
 
     # Create new score entry for the user
-    new_game_score = GameScore(score=score, user_id=new_user.id)
+    new_game_score = GameScore(score=first_score, user_id=new_user.id)
     db.session.add(new_game_score)
 
     # commit both changes to the database
