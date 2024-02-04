@@ -100,9 +100,21 @@
                 {% endfor %}
             </table>
         </div>
+        <div>
+            <button id="deleteScoreBtn" class="button-style">Delete My Score</button>
+        </div>
         <a href="/" class="button-style">
             <i class="fas fa-home"></i> <!-- Home icon -->
         </a>
     </div>
+    <script>
+    document.getElementById('deleteScoreBtn').addEventListener('click', function() {
+        const userConfirmed = confirm('Are you sure you want to delete your score? This action cannot be undone.');
+        if (userConfirmed) {
+            // Redirect to Google login for authentication before deletion
+            window.location.href = '/login_for_delete?next=/delete_score';
+        }
+    });
+    </script>
 </body>
 </html>
