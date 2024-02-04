@@ -9,22 +9,26 @@
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
             margin: 0;
-            padding: 20px;
+            padding: 0; /* Adjusted to 0 to allow flexbox centering to work correctly */
+            height: 100vh; /* Make body full viewport height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
             text-align: center;
+        }
+        .high-scores-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px; /* Keeps your width but removes margin:auto; */
+            width: auto; /* Adjust width as needed */
         }
         .headline {
             font-size: 2em;
             color: #0056b3;
             margin-bottom: 10px;
             font-weight: bold;
-        }
-        .high-scores-container {
-            background-color: white;
-            margin: auto;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
         }
         table {
             width: 100%;
@@ -101,7 +105,7 @@
             </table>
         </div>
         <div>
-            <button id="deleteScoreBtn" class="button-style">Delete My Score</button>
+            <button id="deleteScoreBtn" class="button-style"><b>Delete My Score</b></button>
         </div>
         <a href="/" class="button-style">
             <i class="fas fa-home"></i> <!-- Home icon -->
