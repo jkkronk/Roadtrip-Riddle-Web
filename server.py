@@ -7,13 +7,18 @@ from flask_oauthlib.client import OAuth
 from flask_httpauth import HTTPBasicAuth
 from datetime import datetime, timedelta, time
 import time
+import platform
+
 from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, \
     remove_files_and_folders
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+if os.path.exists("/var/data/users.db" or platform.system() != 'Darwin'):
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 
@@ -337,20 +342,25 @@ def new_video():
 
 def get_last_month_high_scores():
     """
-    Get the total scores for each user over the last month.
+    Get the total scores for each user over the current month, including user names.
     """
-    one_month_ago = datetime.utcnow() - timedelta(days=30)
+    # Calculate the start of the current month
+    today = datetime.utcnow()
+    start_of_month = datetime(today.year, today.month, 1)
 
-    # Query to sum scores for each user over the last month
-    users = db.session.query(
-        GameScore.user_id,
+    # Query to sum scores for each user over the current month and join with the User table to get user names
+    monthly_scores = (db.session.query(
+        User.user_name,  # Include user_name in the query
         func.sum(GameScore.score).label('total_score')
-    ).filter(GameScore.played_at >= one_month_ago) \
-        .group_by(GameScore.user_id) \
-        .order_by(func.sum(GameScore.score).desc())
+    ).join(User, User.id == GameScore.user_id)
+                      .filter(GameScore.played_at >= start_of_month)
+                      .group_by(User.id)
+                      .order_by(func.sum(GameScore.score).desc())
+                      .all())
 
-    # Create a list of tuples (user_id, total_score)
-    return users.all()
+    # This will return a list of tuples, each containing (user_name, total_score)
+    return monthly_scores
+
 
 
 if __name__ == '__main__':
