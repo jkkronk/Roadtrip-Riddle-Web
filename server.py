@@ -13,7 +13,7 @@ from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
 

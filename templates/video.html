@@ -85,7 +85,7 @@
         }
         #carEmoji {
             position: absolute;
-            top: -20px;
+            top: -10px;
         }
     </style>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
@@ -208,7 +208,7 @@
         var video = document.getElementById('challengeVideo');
         var videoProgress = document.getElementById('videoProgress');
         var carEmoji = document.getElementById('carEmoji');
-        var offset = 10; // Starting offset in pixels, adjust as needed
+        var offset = 0; // Starting offset in pixels, adjust as needed
 
         function updateCarPosition() {
             var value = (video.currentTime / video.duration) * 100;
