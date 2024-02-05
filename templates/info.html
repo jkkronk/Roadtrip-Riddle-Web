@@ -5,50 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Explanations</title>
     <style>
-        body {
+       body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
             margin: 0;
+            padding: 0; /* Adjusted to 0 to allow flexbox centering to work correctly */
+            height: 100vh; /* Make body full viewport height */
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-        }
-        .headline {
-            font-size: 1em;
-            color: #0056b3;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .score-container {
+            text-align: center;
+       }
+       .score-container {
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
             max-width: 600px;
-            overflow: auto; /* Allows the content to overflow without cutting off */
-        }
-        .privacy p {
-            text-align: center; /* Center aligns the content of the privacy div */
-            margin: auto; /* Centers the div itself if it has a max-width */
+            width: auto;
+       }
+       .headline {
+            font-size: 1em;
+            color: #0056b3;
+            margin-bottom: 5px;
+            font-weight: bold;
+       }
+       .privacy p {
+            text-align: center;
             max-width: 400px;
-        }
-        ul {
-            list-style-type: none; /* Removes the default bullet points */
-            padding: 0; /* Removes default padding */
-        }
-
-        ul li {
-            margin-bottom: 10px; /* Adds a little space between list items */
-        }
-        /* Media query for mobile devices */
-        @media only screen and (max-width: 600px) {
+            margin: 0 auto;
+       }
+       /* Media query for mobile devices */
+       @media only screen and (max-width: 600px) {
             .privacy p {
                 margin-left: 0;
+                margin-right: 0;
             }
         }
-        button, .button-style {
+       button, .button-style {
             background-color: #007bff;
             color: white;
             padding: 10px 15px;
@@ -60,17 +54,16 @@
             display: inline-block;
             text-decoration: none;
             margin: 10px 0;
-        }
-        button:hover, .button-style:hover {
+       }
+       button:hover, .button-style:hover {
             background-color: #0056b3;
-        }
-        .logo {
-            padding-top: 300px; /* Adds some space at the top for the logo */
+       }
+       .logo {
             max-width: 200px;
             height: auto; /* maintain aspect ratio */
             display: block; /* makes the image a block element */
             margin: 0 auto; /* center the logo in the container */
-        }
+       }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
 </head>
@@ -82,22 +75,9 @@
             discover! Immerse yourself in our videos, featuring a captivating car ride through winding roads that lead
             to a mystery city. As you travel, listen closely to our charming host, who will guide you with five
             intriguing clues about the city's identity.</p>
-        <ul>
-            <li><strong>🌍 Guess the City:</strong> Your mission is simple yet exciting. Use the clues and visual cues
-                from the video to guess the city. The faster you guess, the higher your score!</li>
-            <li><strong>🏆 Daily Challenges, Endless Fun:</strong> Every night, we refresh the game with a brand-new
-                destination. Keep coming back to explore new cities and challenge your geographical prowess.</li>
-            <li><strong>🔝 Climb the Leaderboard:</strong> Show off your city-guessing skills by posting your scores on
-                our leaderboard. Compete with friends and players worldwide to see who's the ultimate city expert.</li>
-            <li><strong>📲 Easy to Play, Hard to Master:</strong> Whether you're a geography guru or just starting to
-                explore the world, our game is designed for everyone. Easy to play but challenging to master, it offers
-                endless enjoyment for players.</li>
-        </ul>
-        <p>Join us now at <strong>Roadtrip Riddle</strong> and start your journey to becoming the ultimate city
-            connoisseur. Play, learn, compete, and most importantly, have fun!</p>
         <p><strong>Ready to hit the road? Your first destination awaits...</strong></p>
 
-        <p>This game is open source and you can find source code here: https://roadtrip-riddle.onrender.com </p>
+        <p>This game is open source, and you can find source code here: https://roadtrip-riddle.onrender.com </p>
 
         <p class="headline">📨 Contact me 📨</p>
         <p> jonatan.kronander@gmail.com </p>
