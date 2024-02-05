@@ -1,4 +1,3 @@
-import time
 import os
 from flask import Flask, request, render_template, redirect, url_for, session, send_file, make_response
 from flask_sqlalchemy import SQLAlchemy
@@ -139,6 +138,13 @@ def login():
     return google.authorize(callback=url_for('authorized', _external=True))
 
 
+@app.route('/login_for_delete')
+def login_for_delete():
+    next_url = request.args.get('next', url_for('high_scores'))  # Default to home if not specified
+    session['next_url_after_login'] = next_url
+    return google.authorize(callback=url_for('authorized_for_delete', _external=True))
+
+
 @app.route('/login/authorized')
 def authorized():
     """
@@ -158,6 +164,18 @@ def authorized():
         return redirect(url_for('submit_score', score=score))
     else:
         return redirect(url_for('home'))
+
+
+@app.route('/login/authorized_for_delete')
+def authorized_for_delete():
+    resp = google.authorized_response()
+    if resp is None or resp.get('access_token') is None:
+        # Handle error...
+        return 'Access Denied...'
+
+    session['google_token'] = (resp['access_token'], '')
+    next_url = session.pop('next_url_after_login', url_for('home'))
+    return redirect(next_url)
 
 
 @app.route('/submit_score')
@@ -230,6 +248,28 @@ def already_submitted():
     Page for when the user has already submitted a score today
     """
     return render_template('already_submitted.html')
+
+
+@app.route('/delete_score')
+def delete_score():
+    if 'google_token' not in session:
+        return redirect(url_for('login', next=url_for('delete_score')))
+
+    user_info = google.get('userinfo').data
+    google_user_id = user_info.get('id')
+
+    user = User.query.filter_by(google_user_id=google_user_id).first()
+    if user:
+        # Delete all GameScore records associated with the user
+        GameScore.query.filter_by(user_id=user.id).delete()
+
+        # Assuming you want to set the score to -1 to indicate deletion, adjust as necessary
+        db.session.delete(user)
+        db.session.commit()
+        return redirect(url_for('high_scores', message='Score deleted successfully.'))
+    else:
+        return redirect(url_for('high_scores', error='User not found.'))
+
 
 
 class User(db.Model):
