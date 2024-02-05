@@ -174,8 +174,7 @@ def authorized_for_delete():
         return 'Access Denied...'
 
     session['google_token'] = (resp['access_token'], '')
-    next_url = session.pop('next_url_after_login', url_for('home'))
-    return redirect(next_url)
+    return redirect(url_for('delete_score'))
 
 
 @app.route('/submit_score')
