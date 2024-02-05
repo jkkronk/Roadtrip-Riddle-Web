@@ -85,20 +85,18 @@
             </table>
         </div>
 
-        <div class="scores-section">
+       <div class="scores-section">
             <p class="headline">🔝 High Score - Monthly 🔝</p>
             <table>
                 <tr>
                     <th>User</th>
                     <th>Score</th>
                 </tr>
-                {% for user in monthly_high_scores %}
-                {% if user.total_score is not none and user.total_score >= 0 %}
+                {% for user_name, total_score in monthly_high_scores %}
                 <tr>
-                    <td>{{ user.user_name }}</td>
-                    <td>{{ user.score }}</td>
+                    <td>{{ user_name }}</td>
+                    <td>{{ total_score }}</td>
                 </tr>
-                {% endif %}
                 {% endfor %}
             </table>
         </div>
