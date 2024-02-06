@@ -186,6 +186,12 @@ def submit_score():
         return redirect(url_for('login'))
 
     daily_score = request.args.get('score')
+    try:
+        daily_score = int(daily_score)  # or float(daily_score) if the score can be fractional
+    except ValueError:
+        # Handle the error if conversion fails
+        return "Invalid score value provided", 400
+
     user_info = google.get('userinfo').data
     google_user_id = user_info.get('id')
 
@@ -199,7 +205,7 @@ def submit_score():
         if existing_user:
             # Update existing score
             existing_user.daily_score = daily_score
-            new_game_score = GameScore(score=score, user_id=existing_user.id)
+            new_game_score = GameScore(score=daily_score, user_id=existing_user.id)
             db.session.add(new_game_score)
         else:
             session['temp_score'] = request.args.get('score')
