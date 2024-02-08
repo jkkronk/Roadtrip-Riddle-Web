@@ -9,7 +9,6 @@ Here is the app deployed on render: https://roadtrip-riddle.onrender.com
 <img src="misc/quiz_page.png">
 <img src="misc/score_page.png">
 
-
 ## Installation
 ```bash
 git clone
@@ -37,6 +36,11 @@ curl admin::password http://localhost:5000/new_quiz
 curl admin::password http://localhost:5000/new_frames
 curl admin::password http://localhost:5000/new_video
 curl admin::password http://localhost:5000/clear_highscore 
+```
+
+If you want to just get a mobile friendly video you can call create_sample.py as follows:
+```bash
+python create_sample.py ./data ./static/intro_mobile_example.txt
 ```
 
 ## Testing

@@ -179,7 +179,7 @@ def create_quiz(city:str, openai_api_key="") -> QuizClues:
     return clues
 
 
-def create_new_quiz(data_dir="/var/data/", city=""):
+def create_new_quiz(data_dir="/var/data/", city="", additional_intro=""):
     """
     Create a new quiz.
     :param data_dir: path to the data directory
@@ -198,7 +198,9 @@ def create_new_quiz(data_dir="/var/data/", city=""):
         # Create the audio
         host_voice = "echo"
         sound = asyncio.run(audio_creator.quiz_2_speech_openai(city_quiz, host_voice))
-        host = QuizHost("What city is our destination?...", f"... And the correct answer is... {city}")
+        if additional_intro != "":
+            additional_intro = "What city is our destination?..."
+        host = QuizHost(additional_intro, f"... And the correct answer is... {city}")
         sound_intro = asyncio.run(audio_creator.text_2_speech_openai(host.intro, host_voice))
         sound = sound_intro + sound
         sound.export(os.path.join(data_dir, "quiz.mp3"), format="mp3")
@@ -218,3 +220,5 @@ def create_new_quiz(data_dir="/var/data/", city=""):
 
     with open(os.path.join(data_dir,"path_coordinates.pkl"), "wb") as f:
         pickle.dump(path_coordinates, f)
+
+    return city
