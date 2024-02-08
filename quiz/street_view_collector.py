@@ -233,10 +233,11 @@ def is_gray_image(image_path):
     return all(x < 20 for x in std_dev)  # Threshold for grayness, might need adjustment
 
 
-def create_new_frames(data_dir="/var/data"):
+def create_new_frames(data_dir="/var/data", format="desktop"):
     """
     Create new frames
     :param data_dir: path to the data directory
+    :param format: mobile or desktop
     :return: void
     """
     with open(os.path.join(data_dir, "path_coordinates.pkl"), "rb") as f:
@@ -250,7 +251,7 @@ def create_new_frames(data_dir="/var/data"):
     itr = 0
     nbr_files = 0
     while nbr_files < len(path_coordinates)*0.5:
-        fetch_street_view_images(path_coordinates, data_dir, "desktop")
+        fetch_street_view_images(path_coordinates, data_dir, format)
         nbr_files = len(os.listdir(os.path.join(data_dir, "frames")))
         # if we have done this 10 times and still have less than 100 files, then we have a problem
         itr += 1

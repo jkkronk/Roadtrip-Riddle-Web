@@ -43,7 +43,7 @@ def images_to_video(folder, image_duration=0.4, frame_rate=24, video_codec=cv2.V
     out.release()
 
 
-def create_new_video(data_dir="/var/data/"):
+def create_new_video(data_dir="/var/data/", out_dir=""):
     """
     Creates a new video from the images in the data_dir
     :param data_dir: path to the data directory
@@ -61,4 +61,6 @@ def create_new_video(data_dir="/var/data/"):
     final_clip = video_clip.set_audio(final_audio)
 
     # Write the result to a file
-    final_clip.write_videofile(os.path.join(data_dir, "quiz.mp4"), codec='libx264', audio_codec='aac')
+    if out_dir == "":
+        out_dir = data_dir
+    final_clip.write_videofile(os.path.join(out_dir, "quiz.mp4"), codec='libx264', audio_codec='aac')
