@@ -188,7 +188,7 @@
             var score = "{{ score }}";
             var carCount = Math.round(score / 10); // Calculate number of 🚘 symbols
             var dashCount = 10 - carCount; // Calculate number of ➖ symbols
-            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " " + score + " Points, Try to beat me! roadtrip-riddle.onrender.com";
+            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + "\n" + score + " Points! Try to beat me!\nhttp://roadtrip-riddle.onrender.com";
 
             navigator.clipboard.writeText(shareMessage)
             .then(() => {
@@ -203,8 +203,10 @@
             var score = "{{ score }}";
             var carCount = Math.round(score / 10); // Calculate number of 🚘 symbols
             var dashCount = 10 - carCount; // Calculate number of ➖ symbols
-            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " " + score + " Points, try to beat me! roadtrip-riddle.onrender.com";
-            var whatsappUrl = "https://api.whatsapp.com/send/?text=" + encodeURIComponent(shareMessage);
+            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + "\n"
+                       + score + " Points! try to beat me!\n"
+                       + "http://roadtrip-riddle.onrender.com";
+                var whatsappUrl = "https://api.whatsapp.com/send/?text=" + encodeURIComponent(shareMessage);
             window.open(whatsappUrl, '_blank'); // Open the link in a new tab/window
         });
 
@@ -212,7 +214,7 @@
             var score = "{{ score }}";
             var carCount = Math.round(score / 10); // Calculate number of 🚘 symbols
             var dashCount = 10 - carCount; // Calculate number of ➖ symbols
-            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + " " + score + " Points, try to beat me! roadtrip-riddle.onrender.com";
+            var shareMessage = "🚘".repeat(carCount) + "➖".repeat(dashCount) + "%0A" + score + " Points! Try to beat me!%0Ahttp://roadtrip-riddle.onrender.com";
             var twitterShareUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareMessage);
 
             document.getElementById("twitterShare").setAttribute("href", twitterShareUrl);
