@@ -56,7 +56,7 @@ def create_new_video(data_dir="/var/data/"):
     # Load the audio file
     audio_clip = AudioFileClip(os.path.join(data_dir, "quiz.mp3"))
     # Create a silent audio clip with a duration of 5 seconds
-    silent_clip = AudioClip(lambda t: [0] * 2, duration=5, fps=44100)
+    silent_clip = AudioClip(lambda t: [0] * 2, duration=3, fps=44100)
     final_audio = concatenate_audioclips([audio_clip, silent_clip])
     final_clip = video_clip.set_audio(final_audio)
 
