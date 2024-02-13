@@ -81,5 +81,46 @@
             <i class="fas fa-info-circle"></i> <!-- Info icon -->
         </a>
     </div>
+    <div id="cookieConsentContainer" style="display: none; position: fixed; bottom: 0; width: 100%; background-color: rgba(0,0,0,0.7); color: #fff; text-align: center; padding: 20px; z-index: 1000;">
+      <p>This website uses cookies to ensure you get the best experience on our website.
+      <a href="/info" style="color: #007bff;">Learn More</a>.
+      <button id="acceptCookieConsent" style="background-color: #007bff; color: #000; border: none; padding: 5px 10px; margin-left: 10px; cursor: pointer;">Accept</button></p>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var consent = getCookie("userConsent");
+  if (!consent) {
+    document.getElementById("cookieConsentContainer").style.display = "block";
+  }
+
+  document.getElementById("acceptCookieConsent").onclick = function() {
+    setCookie("userConsent", "true", 365); // Set the consent cookie to expire in 365 days
+    document.getElementById("cookieConsentContainer").style.display = "none";
+  };
+
+  function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+      var date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+  }
+
+  function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+      var c = ca[i];
+      while (c.charAt(0)==' ') c = c.substring(1,c.length);
+      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+  }
+});
+</script>
+
 </body>
 </html>
