@@ -3,4 +3,5 @@ __pycache__/
 instance/
 data
 venv
+*.mp4
 .idea/
