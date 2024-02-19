@@ -66,10 +66,16 @@ def video():
     """
     Video page
     """
-    # Check if the user has a valid cookie
-    if request.cookies.get('played_today'):
-        # Redirect to score if they've already played today
-        return redirect(url_for('score'))
+    # Check if the user has a valid cookie indicating they've played today
+    cookie_value = request.cookies.get('played_today')
+    if cookie_value:
+        # Assuming the cookie format is "true,score=123"
+        played_today, score_daily_score = cookie_value.split(',', 1)  # Extract the played_today part
+        daily_score = score_daily_score.split('=', 1)[1]  # Extract the score part
+        if played_today == 'true':
+            # Redirect to score if they've already played today
+            session['latest_score'] = int(daily_score)
+            return redirect(url_for('score'))
 
     # Rest of your existing code
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
@@ -108,10 +114,12 @@ def submit_answer():
     daily_score = calculate_score(time_taken, video_path)
     session['latest_score'] = daily_score
 
-    # Set a cookie that expires in 24 hours
+    # Set a cookie that expires at 5 am CEST
     resp = make_response(redirect(url_for('score')))
     expiration_datetime = get_expiration_time()
-    resp.set_cookie('played_today', 'true', expires=expiration_datetime)
+    score_value = f"{daily_score}"
+    cookie_value = f"true,score={score_value}"
+    resp.set_cookie('played_today', cookie_value, expires=expiration_datetime)
     return resp
 
 
@@ -121,7 +129,8 @@ def score():
     """
     Score page
     """
-    user_score = session.get('latest_score', 0)  # Default to 0 if not found in session
+    user_score = session.get('latest_score', 0)
+
     daily_scores = User.query.order_by(User.daily_score.desc()).all()
     quiz_path = os.path.join(os.environ.get('RR_DATA_PATH'), "quiz.json")
     correct_answer = get_answer(quiz_path)
