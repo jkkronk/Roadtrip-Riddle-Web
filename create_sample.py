@@ -15,6 +15,8 @@ def main():
     quiz_creator.create_new_quiz("./data", args.city)
     street_view_collector.create_new_frames("./data", "mobile")
     video_creator.create_new_video("./data", args.out)
+    # Do some modifications to video to make it tiktok/instagram friendly
+
 
 
 if __name__ == "__main__":
