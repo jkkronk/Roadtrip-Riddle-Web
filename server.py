@@ -373,14 +373,25 @@ def clear_quiz():
     return "Quiz cleared!"
 
 
-@app.route('/new_quiz')
+@app.route('/new_quiz_random')
 @auth.login_required
-def new_quiz():
+def new_quiz_random():
     """
     Create a new quiz
     """
     quiz_creator.create_new_quiz(os.environ.get('RR_DATA_PATH'))
     return "Quiz created!"
+
+
+@app.route('/new_quiz/<city_name>')
+@auth.login_required
+def new_quiz(city_name):
+    """
+    Create a new quiz for a given city
+    """
+    # Ensure the city_name is properly passed to your quiz creation logic
+    quiz_creator.create_new_quiz(os.environ.get('RR_DATA_PATH'), city_name)
+    return f"Quiz created for {city_name}!"
 
 
 @app.route('/new_video')
