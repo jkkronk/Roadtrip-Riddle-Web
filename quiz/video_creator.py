@@ -43,7 +43,7 @@ def images_to_video(folder, image_duration=0.3, frame_rate=24, video_codec=cv2.V
     out.release()
 
 
-def create_new_video(data_dir="/var/data/", out_dir="", add_silent_audio=True):
+def create_new_video(data_dir="/var/data/", out_dir=""):
     """
     Creates a new video from the images in the data_dir
     :param data_dir: path to the data directory
@@ -57,10 +57,6 @@ def create_new_video(data_dir="/var/data/", out_dir="", add_silent_audio=True):
     video_clip = VideoFileClip(os.path.join(data_dir, "quiz_no_audio.mp4"))
     # Load the audio file
     audio_clip = AudioFileClip(os.path.join(data_dir, "quiz.mp3"))
-    if add_silent_audio:
-        # Create a silent audio clip with a duration of 4 seconds
-        silent_clip = AudioClip(lambda t: [0] * 2, duration=4, fps=44100)
-        audio_clip = concatenate_audioclips([audio_clip, silent_clip])
 
     # Assuming video_clip is already loaded
     video_duration = video_clip.duration  # Get the original video duration

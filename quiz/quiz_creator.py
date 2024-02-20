@@ -6,6 +6,8 @@ import instructor
 import json
 import random
 import asyncio
+from moviepy.editor import AudioFileClip
+from pydub import AudioSegment
 
 from quiz import street_view_collector
 from quiz import audio_creator
@@ -179,7 +181,7 @@ def create_quiz(city:str, openai_api_key="") -> QuizClues:
     return clues
 
 
-def create_new_quiz(data_dir="/var/data/", city=""):
+def create_new_quiz(data_dir="/var/data/", city="", add_outro=False):
     """
     Create a new quiz.
     :param data_dir: path to the data directory
@@ -199,8 +201,23 @@ def create_new_quiz(data_dir="/var/data/", city=""):
         host_voice = "echo"
         sound = asyncio.run(audio_creator.quiz_2_speech_openai(city_quiz, host_voice))
         host = QuizHost("Where are we going?...", f"... And the correct answer is... {city}")
-        sound_intro = asyncio.run(audio_creator.text_2_speech_openai(host.intro, host_voice))
-        sound = sound_intro + sound
+
+        if os.path.exists(os.path.join(data_dir, "intro.mp3")):
+            sound_intro = AudioSegment.from_mp3(os.path.join(data_dir, "intro.mp3"))
+        else:
+            sound_intro = asyncio.run(audio_creator.text_2_speech_openai(host.intro, host_voice))
+            sound_intro.export(os.path.join(data_dir, "intro.mp3"), format="mp3")
+
+        if add_outro:
+            if os.path.exists(os.path.join(data_dir, "outro.mp3")):
+                sound_outro = AudioSegment.from_mp3(os.path.join(data_dir, "outro.mp3"))
+            else:
+                sound_outro = asyncio.run(audio_creator.text_2_speech_openai(host.outro, host_voice))
+                sound_outro.export(os.path.join(data_dir, "outro.mp3"), format="mp3")
+        else:
+            sound_outro = AudioSegment.silent(duration=4000)
+
+        sound = sound_intro + sound + sound_outro
         sound.export(os.path.join(data_dir, "quiz.mp3"), format="mp3")
         #sound = AudioSegment.from_mp3("static/quiz.mp3")
 
