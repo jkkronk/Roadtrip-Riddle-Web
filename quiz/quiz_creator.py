@@ -198,7 +198,7 @@ def create_new_quiz(data_dir="/var/data/", city=""):
         # Create the audio
         host_voice = "echo"
         sound = asyncio.run(audio_creator.quiz_2_speech_openai(city_quiz, host_voice))
-        host = QuizHost("What city is our destination?...", f"... And the correct answer is... {city}")
+        host = QuizHost("Where are we going?...", f"... And the correct answer is... {city}")
         sound_intro = asyncio.run(audio_creator.text_2_speech_openai(host.intro, host_voice))
         sound = sound_intro + sound
         sound.export(os.path.join(data_dir, "quiz.mp3"), format="mp3")
@@ -206,7 +206,7 @@ def create_new_quiz(data_dir="/var/data/", city=""):
 
         # Create the video
         duration = sound.duration_seconds
-        num_points = street_view_collector.duration_to_num_points(duration, extra_duration=30)
+        num_points = 400 #street_view_collector.duration_to_num_points(duration, extra_duration=30)
 
         for i in range(50):
             print(f"Attempt {i} to get a path with {num_points} points")
