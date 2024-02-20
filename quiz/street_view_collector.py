@@ -92,7 +92,7 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
         lat1 = np.radians(destination_coord[0])
         lon1 = np.radians(destination_coord[1])
         bearing = np.radians(np.random.uniform(0, 360))
-        d_radians = 10 / R # 10 km from the destination
+        d_radians = 15 / R # 10 km from the destination
         new_lat = np.arcsin(np.sin(lat1) * np.cos(d_radians) +
                             np.cos(lat1) * np.sin(d_radians) * np.cos(bearing))
         new_lon = lon1 + np.arctan2(np.sin(bearing) * np.sin(d_radians) * np.cos(lat1),
@@ -142,7 +142,7 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
     if len(path_coordinates) > num_points:
         path_coordinates = path_coordinates[:num_points]
     if len(path_coordinates) < num_points:
-        print("Not enough points in the path")
+        print("Not enough points in the path. Only got " + str(len(path_coordinates)) + " points.")
         return []
 
     return path_coordinates
