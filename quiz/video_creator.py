@@ -1,6 +1,6 @@
 import os
 import cv2
-from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips
+from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips, clips_array
 
 
 def images_to_video(folder, image_duration=0.4, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):

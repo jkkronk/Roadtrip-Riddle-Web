@@ -4,7 +4,7 @@ import requests
 import polyline
 import numpy as np
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageFilter
 import os
 import pickle
 
@@ -137,7 +137,7 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
     return path_coordinates
 
 
-def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_key="", crop_bottom=True, add_logo=False):
+def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_key="", crop_bottom=True, add_logo=False, width=-1, height=-1):
     """
     Fetch the street view images for the given path coordinates
     :param path_coordinates: path coordinates
@@ -146,6 +146,8 @@ def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_ke
     :param api_key: google api key
     :param crop_bottom: crop the bottom of the image
     :param add_logo: add a logo on top of the image
+    :param width: width of the image
+    :param height: height of the image
     :return:
     """
     if api_key == "":
@@ -194,6 +196,8 @@ def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_ke
                     image = image.crop((0, 0, width, height - pixels))
                 if add_logo:
                     image = add_logo_on_top(image)
+                if width != -1 and height != -1:
+                    image = add_boarder(image, width, height)
 
                 image.save(os.path.join(frames_folder, f"{i}.jpg"))
 
@@ -233,11 +237,13 @@ def is_gray_image(image_path):
     return all(x < 20 for x in std_dev)  # Threshold for grayness, might need adjustment
 
 
-def create_new_frames(data_dir="/var/data", video_format="desktop"):
+def create_new_frames(data_dir="/var/data", video_format="desktop", width=-1, height=-1):
     """
     Create new frames
     :param data_dir: path to the data directory
     :param video_format: mobile or desktop
+    :param width: width of the video
+    :param height: height of the video
     :return: void
     """
     with open(os.path.join(data_dir, "path_coordinates.pkl"), "rb") as f:
@@ -250,10 +256,33 @@ def create_new_frames(data_dir="/var/data", video_format="desktop"):
 
     itr = 0
     nbr_files = 0
-    while nbr_files < len(path_coordinates)*0.5:
+    while nbr_files < len(path_coordinates) * 0.5:
         fetch_street_view_images(path_coordinates, data_dir, video_format)
         nbr_files = len(os.listdir(os.path.join(data_dir, "frames")))
         # if we have done this 10 times and still have less than 100 files, then we have a problem
         itr += 1
         if itr > 10:
             raise Exception("Failed to create frames")
+
+
+def add_boarder(frame, border_width, border_height):
+    '''
+    Add a border to the frame
+    @param frame:
+    @param border_width:
+    @param border_height:
+    @return:
+    '''
+    # Resize and blur the image to create the border effect
+    border_image = frame.resize((border_width, border_height)).filter(ImageFilter.GaussianBlur(15))
+
+    # Resize border back to original size but keep the blur
+    border_image = border_image.resize(frame.size)
+
+    # Overlay the original frame on top of the blurred border
+    final_image = Image.new("RGB", frame.size, "black")
+    final_image.paste(border_image, (0, 0))
+    final_image.paste(frame, (border_width // 2, border_height // 2))
+
+    # Convert back to numpy array to return
+    return final_image
