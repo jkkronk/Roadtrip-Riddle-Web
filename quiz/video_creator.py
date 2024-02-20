@@ -1,6 +1,6 @@
 import os
 import cv2
-from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips, clips_array
+from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips, clips_array, CompositeAudioClip
 
 
 def images_to_video(folder, image_duration=0.3, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
@@ -43,7 +43,7 @@ def images_to_video(folder, image_duration=0.3, frame_rate=24, video_codec=cv2.V
     out.release()
 
 
-def create_new_video(data_dir="/var/data/", out_dir=""):
+def create_new_video(data_dir="/var/data/", out_dir="", add_music=True):
     """
     Creates a new video from the images in the data_dir
     :param data_dir: path to the data directory
@@ -57,10 +57,15 @@ def create_new_video(data_dir="/var/data/", out_dir=""):
     video_clip = VideoFileClip(os.path.join(data_dir, "quiz_no_audio.mp4"))
     # Load the audio file
     audio_clip = AudioFileClip(os.path.join(data_dir, "quiz.mp3"))
-
-    # Assuming video_clip is already loaded
-    video_duration = video_clip.duration  # Get the original video duration
     audio_duration = audio_clip.duration  # Get the final audio duration
+    video_duration = video_clip.duration  # Get the original video duration
+
+    if add_music:
+        # Load the music file and adjust its duration to match the video clip
+        music_clip = AudioFileClip("./static/Dont_Go_Way_Nobody.mp3").set_duration(audio_duration)
+        # Mix the original audio with the music
+        audio_clip = CompositeAudioClip([audio_clip, music_clip.volumex(0.15)])  # Adjust volume of music as needed
+
     # Calculate the start time for the new subclip to match the audio duration
     start_time = max(0, video_duration - audio_duration)  # Ensure start_time is not negative
     # Create a new subclip from the video_clip starting from start_time to the end
