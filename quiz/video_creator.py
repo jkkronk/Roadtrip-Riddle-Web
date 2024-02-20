@@ -1,9 +1,9 @@
 import os
 import cv2
-from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips
+from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips, clips_array
 
 
-def images_to_video(folder, image_duration=0.4, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
+def images_to_video(folder, image_duration=0.3, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
     """
     Creates a video from a folder of images
     :param folder: path to the folder containing the images
@@ -47,6 +47,8 @@ def create_new_video(data_dir="/var/data/", out_dir=""):
     """
     Creates a new video from the images in the data_dir
     :param data_dir: path to the data directory
+    :param out_dir: path to the output directory
+    :param add_silent_audio: whether to add silent audio to the video
     :return:
     """
     # Load all images from data_dir
@@ -55,12 +57,16 @@ def create_new_video(data_dir="/var/data/", out_dir=""):
     video_clip = VideoFileClip(os.path.join(data_dir, "quiz_no_audio.mp4"))
     # Load the audio file
     audio_clip = AudioFileClip(os.path.join(data_dir, "quiz.mp3"))
-    # Create a silent audio clip with a duration of 4 seconds
-    silent_clip = AudioClip(lambda t: [0] * 2, duration=4, fps=44100)
-    final_audio = concatenate_audioclips([audio_clip, silent_clip])
-    final_clip = video_clip.set_audio(final_audio)
-    # Cut the video to the length of final audio
-    final_clip = final_clip.set_duration(final_audio.duration)
+
+    # Assuming video_clip is already loaded
+    video_duration = video_clip.duration  # Get the original video duration
+    audio_duration = audio_clip.duration  # Get the final audio duration
+    # Calculate the start time for the new subclip to match the audio duration
+    start_time = max(0, video_duration - audio_duration)  # Ensure start_time is not negative
+    # Create a new subclip from the video_clip starting from start_time to the end
+    new_video_clip = video_clip.subclip(start_time, video_duration)
+    # Now, you can set the audio of the new_video_clip to final_audio
+    final_clip = new_video_clip.set_audio(audio_clip)
 
     # Write the result to a file
     if out_dir == "":

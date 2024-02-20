@@ -4,7 +4,7 @@ import requests
 import polyline
 import numpy as np
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageFilter
 import os
 import pickle
 
@@ -86,11 +86,22 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
     destination_coord = get_coordinates_from_city(destination)
 
     if (start_location == ""):
-        # Randomly generate a start location
-        lat_random = np.random.uniform(-0.75, 0.75)
-        lng_random = np.random.uniform(-0.75, 0.75)
-        start_coord = destination_coord[0] + lat_random, destination_coord[
-            1] + lng_random  # Slightly offset the start location
+        # Randomly generate a start location in a ring around the destination
+        # Earth radius in kilometers
+        R = 6371.0
+        lat1 = np.radians(destination_coord[0])
+        lon1 = np.radians(destination_coord[1])
+        bearing = np.radians(np.random.uniform(0, 360))
+        d_radians = 10 / R # 10 km from the destination
+        new_lat = np.arcsin(np.sin(lat1) * np.cos(d_radians) +
+                            np.cos(lat1) * np.sin(d_radians) * np.cos(bearing))
+        new_lon = lon1 + np.arctan2(np.sin(bearing) * np.sin(d_radians) * np.cos(lat1),
+                                    np.cos(d_radians) - np.sin(lat1) * np.sin(new_lat))
+
+        new_lat_deg = np.degrees(new_lat)
+        new_lon_deg = np.degrees(new_lon)
+
+        start_coord = new_lat_deg, new_lon_deg
     else:
         start_coord = get_coordinates_from_city(start_location)
 
@@ -137,7 +148,7 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
     return path_coordinates
 
 
-def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_key="", crop_bottom=True, add_logo=False):
+def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_key="", crop_bottom=True, add_logo=False, width_full=-1, height_full=-1):
     """
     Fetch the street view images for the given path coordinates
     :param path_coordinates: path coordinates
@@ -146,6 +157,8 @@ def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_ke
     :param api_key: google api key
     :param crop_bottom: crop the bottom of the image
     :param add_logo: add a logo on top of the image
+    :param width_full: width of the image
+    :param height_full: height of the image
     :return:
     """
     if api_key == "":
@@ -194,6 +207,8 @@ def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_ke
                     image = image.crop((0, 0, width, height - pixels))
                 if add_logo:
                     image = add_logo_on_top(image)
+                if width_full != -1 and height_full != -1:
+                    image = add_boarder(image, width_full, height_full)
 
                 image.save(os.path.join(frames_folder, f"{i}.jpg"))
 
@@ -233,11 +248,13 @@ def is_gray_image(image_path):
     return all(x < 20 for x in std_dev)  # Threshold for grayness, might need adjustment
 
 
-def create_new_frames(data_dir="/var/data", video_format="desktop"):
+def create_new_frames(data_dir="/var/data", video_format="desktop", width=-1, height=-1):
     """
     Create new frames
     :param data_dir: path to the data directory
     :param video_format: mobile or desktop
+    :param width: width of the video
+    :param height: height of the video
     :return: void
     """
     with open(os.path.join(data_dir, "path_coordinates.pkl"), "rb") as f:
@@ -250,10 +267,29 @@ def create_new_frames(data_dir="/var/data", video_format="desktop"):
 
     itr = 0
     nbr_files = 0
-    while nbr_files < len(path_coordinates)*0.5:
-        fetch_street_view_images(path_coordinates, data_dir, video_format)
+    while nbr_files < len(path_coordinates) * 0.5:
+        fetch_street_view_images(path_coordinates, data_dir, video_format, width_full=width, height_full=height)
         nbr_files = len(os.listdir(os.path.join(data_dir, "frames")))
         # if we have done this 10 times and still have less than 100 files, then we have a problem
         itr += 1
         if itr > 10:
             raise Exception("Failed to create frames")
+
+
+def add_boarder(frame, final_width, final_height):
+    '''
+    Add a border to the frame. If the image is smaller than 2/3 of the final size, then the image is resized to fit the final size.
+    @param frame:
+    @param final_width:
+    @param final_height:
+    @return:
+    '''
+    final_image = Image.new("RGB", (final_width, final_height), "black")
+    blurred_background = frame.resize((final_width, final_height)).filter(ImageFilter.GaussianBlur(15))
+    frame = frame.resize((int(final_width*2/3), int(final_height*2/3)))
+    frame_width, frame_height = frame.size
+    border_width = (final_width - frame_width) // 2
+    border_height = (final_height - frame_height) // 2
+    final_image.paste(blurred_background, (0, 0))
+    final_image.paste(frame, (border_width, border_height))
+    return final_image
