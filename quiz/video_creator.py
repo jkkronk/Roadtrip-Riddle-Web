@@ -64,7 +64,7 @@ def create_new_video(data_dir="/var/data/", out_dir="", add_music=True):
         # Load the music file and adjust its duration to match the video clip
         music_clip = AudioFileClip("./static/music.mp3").set_duration(audio_duration)
         # Mix the original audio with the music
-        audio_clip = CompositeAudioClip([audio_clip, music_clip.volumex(0.3)])  # Adjust volume of music as needed
+        audio_clip = CompositeAudioClip([audio_clip, music_clip.volumex(0.25)])  # Adjust volume of music as needed
 
     # Calculate the start time for the new subclip to match the audio duration
     start_time = max(0, video_duration - audio_duration)  # Ensure start_time is not negative
