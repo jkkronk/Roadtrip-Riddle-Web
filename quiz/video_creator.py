@@ -3,7 +3,7 @@ import cv2
 from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips, clips_array, CompositeAudioClip
 
 
-def images_to_video(folder, image_duration=0.3, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
+def images_to_video(folder, image_duration=0.4, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
     """
     Creates a video from a folder of images
     :param folder: path to the folder containing the images
