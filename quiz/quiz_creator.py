@@ -212,7 +212,7 @@ def create_new_quiz(data_dir="/var/data/", city="", add_outro=False):
             if os.path.exists(os.path.join(data_dir, "outro.mp3")):
                 sound_outro = AudioSegment.from_mp3(os.path.join(data_dir, "outro.mp3"))
             else:
-                sound_outro = asyncio.run(audio_creator.text_2_speech_openai(host.outro, host_voice))
+                sound_outro = asyncio.run(audio_creator.text_2_speech_openai(host.outro, host_voice)) + AudioSegment.silent(duration=200)
                 sound_outro.export(os.path.join(data_dir, "outro.mp3"), format="mp3")
         else:
             sound_outro = AudioSegment.silent(duration=4000)
@@ -225,7 +225,7 @@ def create_new_quiz(data_dir="/var/data/", city="", add_outro=False):
         #duration = sound.duration_seconds
         num_points = 400 #street_view_collector.duration_to_num_points(duration, extra_duration=30)
 
-        for i in range(50):
+        for i in range(360):
             print(f"Attempt {i} to get a path with {num_points} points")
             # Try to get a path with the correct number of points
             path_coordinates = street_view_collector.get_path_coordinates(city, "", num_points)
