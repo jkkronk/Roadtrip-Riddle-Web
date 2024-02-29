@@ -395,13 +395,21 @@ def new_quiz(city_name):
     return f"Quiz created for {city_name}!"
 
 
+@app.route('/new_frames')
+@auth.login_required
+def new_frames():
+    """
+    Create new frames for the quiz
+    """
+    street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
+    return "Frames created!"
+
 @app.route('/new_video')
 @auth.login_required
 def new_video():
     """
     Create new video from the quiz
     """
-    street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
 
