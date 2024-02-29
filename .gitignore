@@ -1,7 +1,6 @@
 __pycache__/
 .DS_Store
 instance/
-data
 venv
 *.mp4
 .idea/
