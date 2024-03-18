@@ -1,10 +1,12 @@
 from openai import OpenAI, AsyncOpenAI
+from elevenlabs import generate
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 import asyncio
 from pydub import AudioSegment
 import os
-
+import io
+from moviepy.editor import AudioFileClip
 
 async def generate_audio_chunk(client, voice, chunk, nr):
     """
@@ -128,3 +130,39 @@ async def text_2_speech_openai(text, voice, openai_api_key=""):
                 raw_audio_bytes = f.read()
 
     return concatenated_audio
+
+
+def quiz_2_speech_elevenlabs(quiz, intro=None, outro=None):
+    '''
+    Generate audio for a quiz.
+    @param quiz: Main quiz object
+    @param intro: intro text
+    @param outro: outro text
+    @return: voice audio
+    '''
+    print(f"Generating audio to file")
+
+    chunks = [clue for clue in quiz.clues]
+
+    concatenated_audio = AudioSegment.empty()
+    if intro:
+        chunk_audio = generate(text=intro, voice="jUlmiWjCqIf6U3aP5jsd", model="eleven_multilingual_v2")
+        audio_segment = AudioSegment.from_mp3(io.BytesIO(chunk_audio))
+        concatenated_audio += audio_segment
+
+    for index, chunk in enumerate(chunks):
+        chunk_audio = generate(text=chunk, voice="jUlmiWjCqIf6U3aP5jsd", model="eleven_multilingual_v2")
+        # Assuming that the generate function represents mp3
+        audio_segment = AudioSegment.from_mp3(io.BytesIO(chunk_audio))
+        concatenated_audio += audio_segment
+
+    if outro:
+        chunk_audio = generate(text=outro, voice="jUlmiWjCqIf6U3aP5jsd", model="eleven_multilingual_v2")
+        audio_segment = AudioSegment.from_mp3(io.BytesIO(chunk_audio))
+        concatenated_audio += audio_segment
+
+    temp_file = "temp_audio.mp3"
+    concatenated_audio.export(temp_file, format="mp3")
+    audio = AudioFileClip(temp_file)
+    os.remove(temp_file)
+    return audio

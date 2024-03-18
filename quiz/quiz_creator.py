@@ -11,7 +11,7 @@ from pydub import AudioSegment
 
 from quiz import street_view_collector
 from quiz import audio_creator
-
+from quiz import video_creator
 class QuizHost():
     """
     A class that represents a quiz host.
@@ -188,47 +188,22 @@ def create_new_quiz(data_dir="/var/data/", city="", add_outro=False, num_points=
     :param city: city name
     :return:
     """
-    path_coordinates = []
-    while len(path_coordinates) == 0:
-        # Create a new quiz
-        if city == "":
-            city = random_destination(data_dir)
-        city_quiz = create_quiz(city)
-        #city_quiz = QuizClues.open("static/quiz.json")
-        city_quiz.save(city, os.path.join(data_dir, "quiz.json"))
+    # Create a new quiz
+    if city == "":
+        city = random_destination(data_dir)
+    print("Creating a new quiz for", city)
+    city_quiz = create_quiz(city)
 
-        # Create the audio
-        host_voice = "echo"
-        sound = asyncio.run(audio_creator.quiz_2_speech_openai(city_quiz, host_voice))
-        host = QuizHost("Where are we going?...", f"... And the correct answer is... {city}")
+    # Create the audio
+    intro = "Vart är vi på väg?..."
+    outro = f"Och vi har kommit fram till... {city}..."
+    audio = audio_creator.quiz_2_speech_elevenlabs(city_quiz, intro, outro)
 
-        if os.path.exists(os.path.join(data_dir, "intro.mp3")):
-            sound_intro = AudioSegment.from_mp3(os.path.join(data_dir, "intro.mp3"))
-        else:
-            sound_intro = asyncio.run(audio_creator.text_2_speech_openai(host.intro, host_voice))
-            sound_intro.export(os.path.join(data_dir, "intro.mp3"), format="mp3")
-
-        if add_outro:
-            if os.path.exists(os.path.join(data_dir, "outro.mp3")):
-                sound_outro = AudioSegment.from_mp3(os.path.join(data_dir, "outro.mp3"))
-            else:
-                sound_outro = asyncio.run(audio_creator.text_2_speech_openai(host.outro, host_voice)) + AudioSegment.silent(duration=200)
-                sound_outro.export(os.path.join(data_dir, "outro.mp3"), format="mp3")
-        else:
-            sound_outro = AudioSegment.silent(duration=4000)
-
-        sound = sound_intro + sound + sound_outro
-        sound.export(os.path.join(data_dir, "quiz.mp3"), format="mp3")
-        #sound = AudioSegment.from_mp3("static/quiz.mp3")
-
-        # Create the video
-        for i in range(360):
-            print(f"Attempt {i} to get a path with {num_points} points")
-            # Try to get a path with the correct number of points
-            path_coordinates = street_view_collector.get_path_coordinates(city, "", num_points)
-            print(f"Got {len(path_coordinates)} points")
-            if len(path_coordinates) == num_points:
-                break
-
-    with open(os.path.join(data_dir,"path_coordinates.pkl"), "wb") as f:
-        pickle.dump(path_coordinates, f)
+    # Create the video
+    print("Creating the video")
+    path_coordinates = street_view_collector.get_path_coordinates(city, "", num_points)
+    images = street_view_collector.fetch_street_view_images(path_coordinates, view="mobile")
+    print("... Frames to video")
+    output_data = os.path.join(data_dir, f"{city}.mp4")
+    video_creator.images_to_video(output_data, images, audio)
+    print("-----Done!-----")

@@ -3,44 +3,51 @@ import cv2
 from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips, clips_array, CompositeAudioClip
 
 
-def images_to_video(folder, image_duration=0.4, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
+def images_to_video(path, images, audio, image_duration=0.4, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V'), zoom_variable=5):
     """
     Creates a video from a folder of images
-    :param folder: path to the folder containing the images
-    :param image_duration: in seconds
-    :param frame_rate: frames per second
-    :param video_codec: what codec to use for the video
+    :param path: the folder to save the video
+    :param images: the list of images
+    :param audio: the audio file
+    :param image_duration: the duration of each image
+    :param frame_rate: the frame rate of the video
+    :param video_codec: the codec to use
     :return:
     """
-    frame_folder = os.path.join(folder, "frames")
-    # Get sorted list of image filenames
-    filenames = [f for f in os.listdir(frame_folder) if f.endswith((".jpg", ".jpeg"))]
-    sorted_filenames = sorted(filenames, key=lambda x: int(x.split('.')[0]))
-
-    if not sorted_filenames:
-        raise ValueError("No images found in the folder")
-
     # Read the first image to get the size
-    first_image = cv2.imread(os.path.join(frame_folder, sorted_filenames[0]))
-    height, width, layers = first_image.shape
+    height, width, _ = images[0].shape
 
     # Define the codec and create VideoWriter object
-    out = cv2.VideoWriter(os.path.join(folder, "quiz_no_audio.mp4"), video_codec, frame_rate, (width, height))
+    out = cv2.VideoWriter(path, video_codec, frame_rate, (width, height))
 
     frame_count = int(frame_rate * image_duration)
 
-    for filename in sorted_filenames:
-        frame = cv2.imread(os.path.join(frame_folder, filename))
-
+    for image in images:
+    
         # Check if image sizes are consistent
-        if frame.shape[0] != height or frame.shape[1] != width:
-            raise ValueError(f"Image size for {filename} does not match the first image size")
+        if image.shape[0] != height or image.shape[1] != width:
+            raise ValueError(f"Image size does not match the first image size")
 
-        # Write the frame multiple times to meet the desired duration per image
+        # Zoom the image a little bit to make it look like a video
         for _ in range(frame_count):
+            # Here it should crop 5 pixels and then resize the image to the original size
+            frame = image[zoom_variable:-zoom_variable, zoom_variable:-zoom_variable]
+            frame = cv2.resize(frame, (width, height))
             out.write(frame)
 
     out.release()
+    
+    ## Adding audio to the video
+    video_clip = VideoFileClip(path)
+
+    start_time = max(0, video_clip.duration - audio.duration)  # Ensure start_time is not negative
+    # Create a new subclip from the video_clip starting from start_time to the end
+    new_video_clip = video_clip.subclip(start_time, video_clip.duration)
+    # Now, you can set the audio of the new_video_clip to final_audio
+    final_clip = new_video_clip.set_audio(audio)
+
+    # Write the result to a file
+    final_clip.write_videofile(path, codec='libx264', audio_codec='aac')
 
 
 def create_new_video(data_dir="/var/data/", out_dir="", add_music=True):
