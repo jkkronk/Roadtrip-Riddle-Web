@@ -13,10 +13,11 @@ from utils import get_answer, calculate_score, get_expiration_time, is_valid_use
 from quiz import quiz_creator, street_view_collector, video_creator
 
 app = Flask(__name__)
-if platform.system() != 'Darwin':
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# if platform.system() != 'Darwin':
+#     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////var/data/users.db"
+# else:
+#
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 
 app.secret_key = os.urandom(24)  # Generate a random key
 auth = HTTPBasicAuth()
@@ -394,13 +395,21 @@ def new_quiz(city_name):
     return f"Quiz created for {city_name}!"
 
 
+@app.route('/new_frames')
+@auth.login_required
+def new_frames():
+    """
+    Create new frames for the quiz
+    """
+    street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
+    return "Frames created!"
+
 @app.route('/new_video')
 @auth.login_required
 def new_video():
     """
     Create new video from the quiz
     """
-    street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
     video_creator.create_new_video(os.environ.get('RR_DATA_PATH'))
     return "Video created!"
 
