@@ -74,11 +74,11 @@ def duration_to_num_points(duration, image_duration=0.4, extra_duration=10):
 def get_path_coordinates(destination, start_location="", num_points=10, api_key=""):
     """
     Get the coordinates of the path from the start location to the destination
-    :param destination:
-    :param start_location:
-    :param num_points:
-    :param api_key:
-    :return:
+    :param destination: destination city
+    :param start_location: start location if "" then a random location is chosen 10 km from the destination
+    :param num_points: number of points to use
+    :param api_key: google api key
+    :return: list of coordinates
     """
     if api_key == "":
         api_key = os.environ.get('GOOGLE_API_KEY')
@@ -105,8 +105,7 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
     else:
         start_coord = get_coordinates_from_city(start_location)
 
-    print(f"Start Location: {start_coord}")
-    print(f"Destination: {destination_coord}")
+    print(f"Coordinates: Start at {start_coord} Finish at {destination_coord}")
 
     # Set up the request to the Google Directions API
     base_url = "https://maps.googleapis.com/maps/api/directions/json"
@@ -148,7 +147,7 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
     return path_coordinates
 
 
-def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_key="", crop_bottom=True, add_logo=False, width_full=-1, height_full=-1):
+def fetch_street_view_images(path_coordinates, image_path="", view="mobile", api_key="", crop_bottom=True, add_logo=False, width_full=-1, height_full=-1):
     """
     Fetch the street view images for the given path coordinates
     :param path_coordinates: path coordinates
@@ -164,14 +163,16 @@ def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_ke
     if api_key == "":
         api_key = os.environ.get('GOOGLE_API_KEY')
 
-    size = "390x640" if view == "mobile" else "630x400"
+    size = "640x640" if view == "mobile" else "630x400"
 
-    frames_folder = os.path.join(image_path, 'frames')
+    if image_path != "":
+        frames_folder = os.path.join(image_path, 'frames')
 
-    # Check if the frames folder exists, and create it if it doesn't
-    if not os.path.exists(frames_folder):
-        os.makedirs(frames_folder)
+        # Check if the frames folder exists, and create it if it doesn't
+        if not os.path.exists(frames_folder):
+            os.makedirs(frames_folder)
 
+    images = []
     for i in range(len(path_coordinates) - 1):
         print(f"Fetching image {i + 1} of {len(path_coordinates) - 1}")
         lat, lng = path_coordinates[i]
@@ -210,7 +211,12 @@ def fetch_street_view_images(path_coordinates, image_path, view="mobile", api_ke
                 if width_full != -1 and height_full != -1:
                     image = add_boarder(image, width_full, height_full)
 
-                image.save(os.path.join(frames_folder, f"{i}.jpg"))
+                if image_path != "":
+                    image.save(os.path.join(frames_folder, f"{i}.jpg"))
+                # Append opencv image to list
+                images.append(np.array(image))
+    return images
+
 
 
 def get_coordinates_from_city(city):

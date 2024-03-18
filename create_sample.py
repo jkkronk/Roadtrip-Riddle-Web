@@ -13,8 +13,6 @@ def main():
     args = parser.parse_args()
 
     quiz_creator.create_new_quiz(args.out, args.city, True)
-    street_view_collector.create_new_frames(args.out, "mobile", 1080, 1920)
-    video_creator.create_new_video(args.out, args.out)
 
 if __name__ == "__main__":
     main()
