@@ -76,8 +76,8 @@ def get_path_coordinates(destination, start_location="", api_key="", num_points=
     Get the coordinates of the path from the start location to the destination
     :param destination: destination city
     :param start_location: start location if "" then a random location is chosen 10 km from the destination
-    :param num_points: number of points to use
     :param api_key: google api key
+    :param num_points: number of points to use
     :return: list of coordinates
     """
     if api_key == "":
@@ -92,7 +92,7 @@ def get_path_coordinates(destination, start_location="", api_key="", num_points=
         lat1 = np.radians(destination_coord[0])
         lon1 = np.radians(destination_coord[1])
         bearing = np.radians(np.random.uniform(0, 360))
-        d_radians = 15 / R # 10 km from the destination
+        d_radians = 15 / R # 15 km from the destination
         new_lat = np.arcsin(np.sin(lat1) * np.cos(d_radians) +
                             np.cos(lat1) * np.sin(d_radians) * np.cos(bearing))
         new_lon = lon1 + np.arctan2(np.sin(bearing) * np.sin(d_radians) * np.cos(lat1),

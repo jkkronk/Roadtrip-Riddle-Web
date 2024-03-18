@@ -197,11 +197,12 @@ def create_new_quiz(data_dir="/var/data/", city="", add_outro=False):
     # Create the audio
     audio = audio_creator.quiz_2_speech_elevenlabs(city_quiz, "Vart är vi på väg?...", f"Och vi har kommit fram till... {city}...")
 
-    num_points = audio.duration * 24 + 100 # 24 frames per second. 100 frames extra
+    num_points = int(audio.duration * 24 + 100) # 24 frames per second. 100 frames extra
 
     # Collecting frames
     print(f"Collecting {num_points} # street view images...")
-    path_coordinates = street_view_collector.get_path_coordinates(city, "", num_points)
+    path_coordinates = street_view_collector.get_path_coordinates(city, num_points=num_points)
+    print(f"Collected {len(path_coordinates)} coordinates")
     images = street_view_collector.fetch_street_view_images(path_coordinates, view="mobile")
 
     # Create the video
