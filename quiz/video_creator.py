@@ -12,7 +12,9 @@ def images_to_video(path, images, audio, image_duration=0.4, frame_rate=24, vide
     :param image_duration: the duration of each image
     :param frame_rate: the frame rate of the video
     :param video_codec: the codec to use
+    :param zoom_variable:
     :return:
+
     """
     # Read the first image to get the size
     height, width, _ = images[0].shape
@@ -22,24 +24,24 @@ def images_to_video(path, images, audio, image_duration=0.4, frame_rate=24, vide
 
     frame_count = int(frame_rate * image_duration)
 
-    for image in images:
-    
+    for idx, image in enumerate(images):
         # Check if image sizes are consistent
         if image.shape[0] != height or image.shape[1] != width:
             raise ValueError(f"Image size does not match the first image size")
 
+        frame = image
         # Zoom the image a little bit to make it look like a video
-        for _ in range(frame_count):
-            # Here it should crop 5 pixels and then resize the image to the original size
-            frame = image[zoom_variable:-zoom_variable, zoom_variable:-zoom_variable]
-            frame = cv2.resize(frame, (width, height))
+        for i in range(frame_count):
+            # Here it should crop x pixels and then resize the image to the original size
+            #frame = frame[zoom_variable:-zoom_variable, zoom_variable:-zoom_variable]
+            #frame = cv2.resize(frame, (width, height))
+            #cv2.imwrite(f"./data/{idx},{i}frame.jpg", frame)
             out.write(frame)
 
     out.release()
     
     ## Adding audio to the video
     video_clip = VideoFileClip(path)
-
     start_time = max(0, video_clip.duration - audio.duration)  # Ensure start_time is not negative
     # Create a new subclip from the video_clip starting from start_time to the end
     new_video_clip = video_clip.subclip(start_time, video_clip.duration)
@@ -47,6 +49,7 @@ def images_to_video(path, images, audio, image_duration=0.4, frame_rate=24, vide
     final_clip = new_video_clip.set_audio(audio)
 
     # Write the result to a file
+    os.remove(path)
     final_clip.write_videofile(path, codec='libx264', audio_codec='aac')
 
 

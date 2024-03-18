@@ -71,13 +71,13 @@ def duration_to_num_points(duration, image_duration=0.4, extra_duration=10):
     return num_points
 
 
-def get_path_coordinates(destination, start_location="", num_points=10, api_key=""):
+def get_path_coordinates(destination, start_location="", api_key="", num_points=100):
     """
     Get the coordinates of the path from the start location to the destination
     :param destination: destination city
     :param start_location: start location if "" then a random location is chosen 10 km from the destination
-    :param num_points: number of points to use
     :param api_key: google api key
+    :param num_points: number of points to use
     :return: list of coordinates
     """
     if api_key == "":
@@ -92,7 +92,7 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
         lat1 = np.radians(destination_coord[0])
         lon1 = np.radians(destination_coord[1])
         bearing = np.radians(np.random.uniform(0, 360))
-        d_radians = 15 / R # 10 km from the destination
+        d_radians = 15 / R # 15 km from the destination
         new_lat = np.arcsin(np.sin(lat1) * np.cos(d_radians) +
                             np.cos(lat1) * np.sin(d_radians) * np.cos(bearing))
         new_lon = lon1 + np.arctan2(np.sin(bearing) * np.sin(d_radians) * np.cos(lat1),
@@ -132,19 +132,8 @@ def get_path_coordinates(destination, start_location="", num_points=10, api_key=
     # Decode the polyline
     full_path = polyline.decode(encoded_polyline)
 
-    # Select evenly spaced points from the path
-    path_coordinates = []
-    for i in range(0, min(num_points, len(full_path))):
-        path_coordinates.append(full_path[i])
-
-    # Trim or extend the list to match the desired number of points
-    if len(path_coordinates) > num_points:
-        path_coordinates = path_coordinates[:num_points]
-    if len(path_coordinates) < num_points:
-        print("Not enough points in the path. Only got " + str(len(path_coordinates)) + " points.")
-        return []
-
-    return path_coordinates
+    # Get the last points to mach the number of points
+    return full_path[-num_points:]
 
 
 def fetch_street_view_images(path_coordinates, image_path="", view="mobile", api_key="", crop_bottom=True, add_logo=False, width_full=-1, height_full=-1):
@@ -214,7 +203,8 @@ def fetch_street_view_images(path_coordinates, image_path="", view="mobile", api
                 if image_path != "":
                     image.save(os.path.join(frames_folder, f"{i}.jpg"))
                 # Append opencv image to list
-                images.append(np.array(image))
+                # Change img RGB to BGR
+                images.append(np.array(image)[:, :, ::-1])
     return images
 
 
