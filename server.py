@@ -10,7 +10,7 @@ import platform
 
 from utils import get_answer, calculate_score, get_expiration_time, is_valid_username, get_explanations, \
     remove_files_and_folders
-from quiz import quiz_creator, street_view_collector, video_creator
+from quiz import quiz_creator, street_view_collector_old, video_creator
 
 app = Flask(__name__)
 # if platform.system() != 'Darwin':
@@ -401,7 +401,7 @@ def new_frames():
     """
     Create new frames for the quiz
     """
-    street_view_collector.create_new_frames(os.environ.get('RR_DATA_PATH'))
+    street_view_collector_old.create_new_frames(os.environ.get('RR_DATA_PATH'))
     return "Frames created!"
 
 @app.route('/new_video')

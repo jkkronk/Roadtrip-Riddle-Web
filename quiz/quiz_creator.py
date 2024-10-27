@@ -1,121 +1,13 @@
 import os.path
-import pickle
-from pydantic import BaseModel, Field
+from pydantic import Field
 from openai import OpenAI
 import instructor
-import json
-import random
 import asyncio
-from moviepy.editor import AudioFileClip
-from pydub import AudioSegment
 
-from quiz import street_view_collector
 from quiz import audio_creator
+from quiz.quiz_clues import QuizClues
+from quiz.utils import random_destination
 
-class QuizHost():
-    """
-    A class that represents a quiz host.
-    """
-    intro: str = Field(..., description="The introduction of the quiz.")
-    outro: str = Field(..., description="The outro of the quiz.")
-
-    #init
-    def __init__(self, intro, outro):
-        self.intro = intro
-        self.outro = outro
-
-class QuizClues(BaseModel):
-    """
-    A class that represents the clues for a quiz.
-    """
-    clues: list[str] = Field(..., description="A list of size 5 with clues for the quiz.")
-    explanations: list[str] = Field(..., description="A list of size 5 with explanations for the clues.")
-
-    def clear_city(self):
-        """
-        Replace the city name with "the city" in all clues.
-        :return:
-        """
-        self.clues = [clue.replace("Zurich", "the city") for clue in self.clues]
-
-    def get_clue(self, round: int) -> str:
-        """
-        Get the clue for a specific round.
-        :param round:
-        :return:
-        """
-        return self.clues[round]
-
-    def get_explanation(self, round: int) -> str:
-        """
-        Get the explanation for a specific round.
-        :param round:
-        :return:
-        """
-        return self.explanations[round]
-
-    def get_all_clues(self):
-        """
-        Get all the clues as a string.
-        :return:
-        """
-        return "\n".join(self.clues)
-
-    def get_all_explanation(self) -> str:
-        """
-        Get all the explanations as a string.
-        :return:
-        """
-        return "\n".join(self.explanations)
-
-    def save(self, city, file_path: str):
-        """
-        Save the clues and explanations to a json file.
-        :param city: city name
-        :param file_path: path to the json file
-        :return: void
-        """
-        data = {
-            "city": city,
-            "clues": self.clues,
-            "explanations": self.explanations
-        }
-        with open(file_path, 'w') as file:
-            json.dump(data, file)
-
-    @classmethod
-    def open(cls, file_path: str):
-        """
-        Open a json file with clues and explanations.
-        :param file_path: path to the json file
-        :return:
-        """
-        with open(file_path, 'r') as file:
-            data = json.load(file)
-            return cls(clues=data['clues'], explanations=data['explanations'])
-
-def random_destination(data_path) -> str:
-    """
-    Get a random destination from the cities text file.
-    :param data_path: path to the cities text file
-    :return: city name
-    """
-
-    # open the cities text file and pick a random city
-    # return the city
-    path_to_cities = os.path.join("./static", "cities.txt")
-
-    # Opening the file
-    with open(path_to_cities, 'r') as file:
-        cities_text = file.read()
-
-    # Splitting the text into a list of cities
-    cities_list = cities_text.split(',')
-
-    # Selecting a random city from the list
-    random_city = random.choice(cities_list)
-
-    return random_city.replace("\n", "")
 
 def create_quiz(city:str, openai_api_key="") -> QuizClues:
     """
@@ -141,19 +33,21 @@ def create_quiz(city:str, openai_api_key="") -> QuizClues:
                 {city}. 
                 Each clue should end with "..."
                 The clues can be humorous and like a riddle. There can be word plays, rimes and puns.
-                The clues should get harder and harder to guess. In the beginning it should be very hard. 
-                But in the end it should be very easy.
+                The clues should get harder and harder to guess. In the beginning it should be hard. 
+                In the end it should be very easy.
                 
                 Additionally, add a short explanation for each clue.
                 
                 An example for the destination Paris could be:
+                >>Road Trip Riddle Time! Where are we going?...
                 >>First Clue: We head towards the city of light or should I say the capital of light? The city is home to the world's most visited museum...
                 >>Second Clue: In our destination a tower reaches for the sky and lovers lock promises on a bridge...
                 >>Third Clue: Amidst cafes and boulevards, our destination is the heart of a nation famed for romance and revolution...
                 >>Fourth Clue: In this city, pair is not the name of the dame. It's Notre...
                 >>Last Clue: We have arrived to the city where a famous tower reaches the sky, and painters love to gather. Here, you can say 'bonjour' and enjoy a croissant by the river...
-                
+
                 Another example for Beijing could be:
+                >>Road Trip Riddle Time! Where are we going?...
                 >>First Clue: We head towards a heavenly city in a country where tea flows like rivers and pearls shine like stars...
                 >>Second Clue: We end up in a square that echoes with both past whispers and future strides, under the watchful eyes of a Chairman...
                 >>Third Clue: Do we end with jing? Yes, and in our local language it also means capital...
@@ -161,6 +55,7 @@ def create_quiz(city:str, openai_api_key="") -> QuizClues:
                 >>Last Clue:  "ni hao" We have now arrived in an asian capital where giant pandas play in a land far away...
                 
                 Another example for Mumbai could be:
+                >>Road Trip Riddle Time! Where are we going?...
                 >>First Clue: We head towards the Gateway of the country. The city traffic doesn't stop the Dabbawalas delivering...
                 >>Second Clue: Vada pav, the city name sandwich, Pani Puri, Khaman. The street food is a delight but watch out for the spice...
                 >>Fourth Clue: At our destination Bollywood is the name of the game. The city is home to the largest film industry in the world...
@@ -181,54 +76,29 @@ def create_quiz(city:str, openai_api_key="") -> QuizClues:
     return clues
 
 
-def create_new_quiz(data_dir="/var/data/", city="", add_outro=False, num_points=300):
+def create_quiz_files(data_dir="/var/data/", quiz_name="quiz.json", city=""):
     """
-    Create a new quiz.
+    Create a new quiz. Saves the quiz, the audio to given data directory.
     :param data_dir: path to the data directory
     :param city: city name
     :return:
     """
-    path_coordinates = []
-    while len(path_coordinates) == 0:
-        # Create a new quiz
-        if city == "":
-            city = random_destination(data_dir)
-        city_quiz = create_quiz(city)
-        #city_quiz = QuizClues.open("static/quiz.json")
-        city_quiz.save(city, os.path.join(data_dir, "quiz.json"))
+    
+    # If no city is provided, get a random city
+    if city == "":
+        city = random_destination(data_dir)
 
-        # Create the audio
-        host_voice = "echo"
-        sound = asyncio.run(audio_creator.quiz_2_speech_openai(city_quiz, host_voice))
-        host = QuizHost("Where are we going?...", f"... And the correct answer is... {city}")
+    # Create a new quiz
+    city_quiz = create_quiz(city)
+    #city_quiz = QuizClues.open("static/quiz.json")
+    quiz_path = os.path.join(data_dir, quiz_name)
+    city_quiz.save(city, quiz_path)
 
-        if os.path.exists(os.path.join(data_dir, "intro.mp3")):
-            sound_intro = AudioSegment.from_mp3(os.path.join(data_dir, "intro.mp3"))
-        else:
-            sound_intro = asyncio.run(audio_creator.text_2_speech_openai(host.intro, host_voice))
-            sound_intro.export(os.path.join(data_dir, "intro.mp3"), format="mp3")
+    # Create the audio
+    host_voice = "echo"
+    sound_name = quiz_name.replace(".json", ".mp3")
+    sound = asyncio.run(audio_creator.quiz_2_speech_openai(city_quiz, host_voice))
+    sound.export(os.path.join(data_dir, sound_name), format="mp3")
 
-        if add_outro:
-            if os.path.exists(os.path.join(data_dir, "outro.mp3")):
-                sound_outro = AudioSegment.from_mp3(os.path.join(data_dir, "outro.mp3"))
-            else:
-                sound_outro = asyncio.run(audio_creator.text_2_speech_openai(host.outro, host_voice)) + AudioSegment.silent(duration=200)
-                sound_outro.export(os.path.join(data_dir, "outro.mp3"), format="mp3")
-        else:
-            sound_outro = AudioSegment.silent(duration=4000)
-
-        sound = sound_intro + sound + sound_outro
-        sound.export(os.path.join(data_dir, "quiz.mp3"), format="mp3")
-        #sound = AudioSegment.from_mp3("static/quiz.mp3")
-
-        # Create the video
-        for i in range(360):
-            print(f"Attempt {i} to get a path with {num_points} points")
-            # Try to get a path with the correct number of points
-            path_coordinates = street_view_collector.get_path_coordinates(city, "", num_points)
-            print(f"Got {len(path_coordinates)} points")
-            if len(path_coordinates) == num_points:
-                break
-
-    with open(os.path.join(data_dir,"path_coordinates.pkl"), "wb") as f:
-        pickle.dump(path_coordinates, f)
+    return data_dir
+    

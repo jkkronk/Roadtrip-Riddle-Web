@@ -1,6 +1,6 @@
 import argparse
 import os
-from quiz import quiz_creator, street_view_collector, video_creator
+from quiz import quiz_creator, street_view_collector_old, video_creator
 
 '''
 Create a mobile version sample. Used to create a sample quiz and video for the mobile version of the quiz.
@@ -12,8 +12,10 @@ def main():
 
     args = parser.parse_args()
 
-    quiz_creator.create_new_quiz(args.out, args.city, True)
-    street_view_collector.create_new_frames(args.out, "mobile", 1080, 1920)
+    quiz_creator.create_quiz_files(args.out, city=args.city)
+
+    
+    street_view_collector_old.create_new_frames(args.out, "mobile", 1080, 1920)
     video_creator.create_new_video(args.out, args.out)
 
 if __name__ == "__main__":
