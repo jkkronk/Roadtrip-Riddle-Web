@@ -4,3 +4,5 @@ instance/
 venv
 *.mp4
 .idea/
+imgs/
+/data/

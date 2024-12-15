@@ -1,11 +1,12 @@
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 import asyncio
 from pydub import AudioSegment
 import os
-
-
+import requests
+import io
+from quiz.quiz_clues import QuizCluesWithAudio
 async def generate_audio_chunk(client, voice, chunk, nr):
     """
     Generate audio for a chunk of text.
@@ -128,3 +129,66 @@ async def text_2_speech_openai(text, voice, openai_api_key=""):
                 raw_audio_bytes = f.read()
 
     return concatenated_audio
+
+
+def quiz_2_speech_elevenlabs(text, voice_id, api_key):
+    """
+    Convert the quiz clues to speech using ElevenLabs API.
+    :param text: text to convert to speech
+    :param voice_name: Name of the voice to use
+    :param api_key: Your ElevenLabs API key
+    :return: AudioSegment object containing the speech audio
+    """
+    
+    # Prepare the request to ElevenLabs API
+    headers = {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': api_key,
+    }
+    data = {
+        "text": text,
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75
+        }
+    }
+
+    response = requests.post(
+        f'https://api.elevenlabs.io/v1/text-to-speech/{voice_id}',
+        headers=headers,
+        json=data
+    )
+    
+    # Check for errors in the response
+    if response.status_code != 200:
+        raise Exception(f"ElevenLabs API request failed with status code {response.status_code}: {response.text}")
+    
+    # Load the audio content
+    audio = AudioSegment.from_file(io.BytesIO(response.content), format="mp3")
+    return audio
+
+
+def create_audio(city_quiz, use_elevenlabs=False, elevenlabs_api_key=''):
+    """
+    Create the audio file for the quiz using either OpenAI or ElevenLabs API.
+    """
+    # Cast the QuizClues to QuizCluesWithAudio
+    city_quiz_with_audio = QuizCluesWithAudio(
+        clues=city_quiz.clues,
+        explanations=city_quiz.explanations,
+        introduction=city_quiz.introduction
+    )
+    
+    host_voice = "2ovNLFOsfyKPEWV5kqQi"
+    
+    for round in range(city_quiz_with_audio.get_nr_rounds()):
+        print(f"Generating audio for round {round}")
+        text = city_quiz_with_audio.get_clue(round)
+        if use_elevenlabs:
+            sound = quiz_2_speech_elevenlabs(text, host_voice, elevenlabs_api_key)
+        else:
+            sound = asyncio.run(quiz_2_speech_openai(text, host_voice))
+        city_quiz_with_audio.append_clue_sound(sound)
+    
+    return city_quiz_with_audio

@@ -1,4 +1,4 @@
-from quiz.street_view_collector import is_gray_image, duration_to_num_points, calculate_heading
+from quiz.street_view_collector_old import is_gray_image, duration_to_num_points, calculate_heading
 import unittest
 
 import pytest

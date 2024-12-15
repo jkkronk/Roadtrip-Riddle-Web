@@ -2,69 +2,131 @@ import os
 import cv2
 from moviepy.editor import VideoFileClip, AudioFileClip, AudioClip, concatenate_audioclips, clips_array, CompositeAudioClip
 
-
-def images_to_video(folder, image_duration=0.4, frame_rate=24, video_codec=cv2.VideoWriter_fourcc(*'MP4V')):
+def crop_to_aspect_ratio(image, size):
     """
-    Creates a video from a folder of images
-    :param folder: path to the folder containing the images
-    :param image_duration: in seconds
+    Crops the image to the aspect ratio of the size and then resizes it to the desired size
+    
+    Args:
+        image: numpy array of the image
+        size: tuple of (width, height) for desired output size
+    
+    Returns:
+        Cropped and resized image
+    """
+    target_width, target_height = size
+    target_ratio = target_width / target_height
+    
+    # Get current image dimensions
+    height, width = image.shape[:2]
+    current_ratio = width / height
+    
+    # Calculate dimensions for cropping
+    if current_ratio > target_ratio:
+        # Image is too wide - crop width
+        new_width = int(height * target_ratio)
+        crop_x = (width - new_width) // 2
+        cropped = image[:, crop_x:crop_x + new_width]
+    else:
+        # Image is too tall - crop height
+        new_height = int(width / target_ratio)
+        crop_y = (height - new_height) // 2
+        cropped = image[crop_y:crop_y + new_height, :]
+    
+    # Resize to final dimensions
+    resized = cv2.resize(cropped, size)
+    return resized
+
+import os
+import cv2
+import numpy as np
+
+def images_to_video(frame_folder, frame_folder_second, out_folder="data/videos/", 
+                    frame_rate=24, 
+                    video_codec=cv2.VideoWriter_fourcc(*'avc1'), 
+                    size=(1080, 1920)):
+    """
+    Creates a video from two folders of images by stacking the second folder's image 
+    under the first folder's image for each frame.
+    
+    :param frame_folder: path to the folder containing the first set of images
+    :param frame_folder_second: path to the folder containing the second set of images
+    :param out_folder: path to the output folder
     :param frame_rate: frames per second
     :param video_codec: what codec to use for the video
+    :param size: size of the single image in the output (width, height)
+                 The final output video will have double the height if we're stacking images.
     :return:
     """
-    frame_folder = os.path.join(folder, "frames")
-    # Get sorted list of image filenames
-    filenames = [f for f in os.listdir(frame_folder) if f.endswith((".jpg", ".jpeg"))]
-    sorted_filenames = sorted(filenames, key=lambda x: int(x.split('.')[0]))
+    # Get sorted list of image filenames from the first folder
+    filenames = [f for f in os.listdir(frame_folder) if f.lower().endswith((".jpg", ".jpeg"))]
+    sorted_filenames = sorted(filenames, key=lambda x: int(x.split('_')[1].split('.')[0]))
+
+    # Get sorted list of image filenames from the second folder
+    filenames_second = [f for f in os.listdir(frame_folder_second) if f.lower().endswith((".png"))]
+    sorted_filenames_second = sorted(filenames_second, key=lambda x: int(x.split('_')[1].split('.')[0]))
 
     if not sorted_filenames:
-        raise ValueError("No images found in the folder")
+        raise ValueError("No images found in the first folder")
+    if not sorted_filenames_second:
+        raise ValueError("No images found in the second folder")
 
-    # Read the first image to get the size
-    first_image = cv2.imread(os.path.join(frame_folder, sorted_filenames[0]))
-    height, width, layers = first_image.shape
+    if len(sorted_filenames) != len(sorted_filenames_second):
+        raise ValueError("The number of images in both folders must be the same")
 
-    # Define the codec and create VideoWriter object
-    out = cv2.VideoWriter(os.path.join(folder, "quiz_no_audio.mp4"), video_codec, frame_rate, (width, height))
+    # Read the first pair of images to determine final video size
+    first_image_top = cv2.imread(os.path.join(frame_folder, sorted_filenames[0]))
+    first_image_bottom = cv2.imread(os.path.join(frame_folder_second, sorted_filenames_second[0]))
 
-    frame_count = int(frame_rate * image_duration)
+    # Assuming you have a function crop_to_aspect_ratio that crops images to the given size
+    top_cropped = crop_to_aspect_ratio(first_image_top, size)
+    bottom_cropped = crop_to_aspect_ratio(first_image_bottom, size)
 
-    for filename in sorted_filenames:
-        frame = cv2.imread(os.path.join(frame_folder, filename))
+    # Check if sizes match
+    if top_cropped.shape[1] != size[0] or top_cropped.shape[0] != size[1]:
+        raise ValueError(f"Top image size after cropping does not match the desired {size}")
+    if bottom_cropped.shape[1] != size[0] or bottom_cropped.shape[0] != size[1]:
+        raise ValueError(f"Bottom image size after cropping does not match the desired {size}")
 
-        # Check if image sizes are consistent
-        if frame.shape[0] != height or frame.shape[1] != width:
-            raise ValueError(f"Image size for {filename} does not match the first image size")
+    # Define the final size to stack one image under the other
+    final_size = (size[0], size[1]*2)  # same width, double height
 
-        # Write the frame multiple times to meet the desired duration per image
-        for _ in range(frame_count):
-            out.write(frame)
+    # Create VideoWriter object
+    out = cv2.VideoWriter(os.path.join(out_folder, "quiz_no_audio.mp4"), video_codec, frame_rate, final_size)
+
+    for fname_top, fname_bottom in zip(sorted_filenames, sorted_filenames_second):
+        # Read and preprocess top image
+        frame_top = cv2.imread(os.path.join(frame_folder, fname_top))
+        frame_top = crop_to_aspect_ratio(frame_top, size)
+        if frame_top.shape[1] != size[0] or frame_top.shape[0] != size[1]:
+            raise ValueError(f"Image size for {fname_top} does not match the set image size")
+
+        # Read and preprocess bottom image
+        frame_bottom = cv2.imread(os.path.join(frame_folder_second, fname_bottom))
+        frame_bottom = crop_to_aspect_ratio(frame_bottom, size)
+        if frame_bottom.shape[1] != size[0] or frame_bottom.shape[0] != size[1]:
+            raise ValueError(f"Image size for {fname_bottom} does not match the set image size")
+
+        # Stack images vertically
+        combined_frame = np.vstack((frame_top, frame_bottom))
+        
+        # Write combined frame to video
+        out.write(combined_frame)
 
     out.release()
+    print("Video created successfully at:", os.path.join(out_folder, "quiz_no_audio.mp4"))
 
 
-def create_new_video(data_dir="/var/data/", out_dir="", add_music=True):
+
+def create_new_video(video_clip, audio_clip, out_dir="./data/videos/"):
     """
     Creates a new video from the images in the data_dir
-    :param data_dir: path to the data directory
+    :param video_clip: video clip
+    :param audio_clip: audio clip
     :param out_dir: path to the output directory
-    :param add_silent_audio: whether to add silent audio to the video
     :return:
     """
-    # Load all images from data_dir
-    images_to_video(data_dir)
-    # Load the video file
-    video_clip = VideoFileClip(os.path.join(data_dir, "quiz_no_audio.mp4"))
-    # Load the audio file
-    audio_clip = AudioFileClip(os.path.join(data_dir, "quiz.mp3"))
     audio_duration = audio_clip.duration  # Get the final audio duration
     video_duration = video_clip.duration  # Get the original video duration
-
-    if add_music:
-        # Load the music file and adjust its duration to match the video clip
-        music_clip = AudioFileClip("./static/music.mp3").set_duration(audio_duration)
-        # Mix the original audio with the music
-        audio_clip = CompositeAudioClip([audio_clip, music_clip.volumex(0.25)])  # Adjust volume of music as needed
 
     # Calculate the start time for the new subclip to match the audio duration
     start_time = max(0, video_duration - audio_duration)  # Ensure start_time is not negative
@@ -74,6 +136,4 @@ def create_new_video(data_dir="/var/data/", out_dir="", add_music=True):
     final_clip = new_video_clip.set_audio(audio_clip)
 
     # Write the result to a file
-    if out_dir == "":
-        out_dir = data_dir
     final_clip.write_videofile(os.path.join(out_dir, "quiz.mp4"), codec='libx264', audio_codec='aac')
