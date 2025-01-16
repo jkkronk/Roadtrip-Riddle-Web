@@ -3,7 +3,7 @@ import json
 from moviepy.editor import VideoFileClip, AudioFileClip
 
 from quiz.audio_creator import create_audio
-from quiz.image_collector import collect_images
+from quiz.image_collector import ImageCollector
 from quiz.video_creator import images_to_video, create_new_video
 from quiz.utils import random_destination
 from quiz.quiz_clues import QuizClues, QuizCluesWithAudio
@@ -38,24 +38,23 @@ def main(data_dir='/Users/JonatanMBA/Documents/code/Roadtrip-Riddle-Web/data/', 
         quiz = QuizCluesWithAudio.open(audio_file)
         print(f"Audio file already exists in {data_dir}")
     
-    audio_duration = quiz.get_total_duration()
-
     images_folder = os.path.join(data_dir, 'images')
     if not os.path.exists(os.path.join(data_dir, 'images')) or not cache:
         os.makedirs(images_folder, exist_ok=True)
-        collected_image_coords = collect_images(city_name=city, data_folder=images_folder)
+        collector = ImageCollector(city, images_folder)
+        route, bearings = collector.collect_images()
         with open(os.path.join(data_dir, 'collected_image_coords.json'), 'w') as f:
-            json.dump(collected_image_coords, f)
+            json.dump(route, f)
     else:
         print(f"Images already exist in {data_dir}")
         with open(os.path.join(data_dir, 'collected_image_coords.json'), 'r') as f:
             collected_image_coords = json.load(f)
-
-    map_path = os.path.join(data_dir, 'images', 'map_frames')
-    if not os.path.exists(map_path) or not cache:
-        os.makedirs(map_path, exist_ok=True)
-        save_maps_for_coordinates(collected_image_coords, output_prefix=map_path + "/map_", width=1080, height=960)
-
+    
+    # map_path = os.path.join(data_dir, 'images', 'map_frames')
+    # if not os.path.exists(map_path) or not cache:
+    #     os.makedirs(map_path, exist_ok=True)
+    #     save_maps_for_coordinates(collected_image_coords, output_prefix=map_path + "/map_", width=1080, height=960)
+    map_path = None
     frame_folder = images_folder
     out_folder = os.path.join(data_dir, 'videos')
     if not os.path.exists(os.path.join(data_dir, 'videos')) or not cache:

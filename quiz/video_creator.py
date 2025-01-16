@@ -59,55 +59,72 @@ def images_to_video(frame_folder, frame_folder_second, out_folder="data/videos/"
     """
     # Get sorted list of image filenames from the first folder
     filenames = [f for f in os.listdir(frame_folder) if f.lower().endswith((".jpg", ".jpeg"))]
-    sorted_filenames = sorted(filenames, key=lambda x: int(x.split('_')[1].split('.')[0]))
+    # Modified sorting to handle filenames without underscores
+    sorted_filenames = sorted(filenames, key=lambda x: int(''.join(filter(str.isdigit, x.split('.')[0])) or 0))
 
     # Get sorted list of image filenames from the second folder
-    filenames_second = [f for f in os.listdir(frame_folder_second) if f.lower().endswith((".png"))]
-    sorted_filenames_second = sorted(filenames_second, key=lambda x: int(x.split('_')[1].split('.')[0]))
+    if frame_folder_second is not None:
+        filenames_second = [f for f in os.listdir(frame_folder_second) if f.lower().endswith((".png"))]
+        sorted_filenames_second = sorted(filenames_second, key=lambda x: int(''.join(filter(str.isdigit, x.split('.')[0])) or 0))
+    else:
+        sorted_filenames_second = []
 
     if not sorted_filenames:
         raise ValueError("No images found in the first folder")
-    if not sorted_filenames_second:
+    if frame_folder_second is not None and not sorted_filenames_second:
         raise ValueError("No images found in the second folder")
 
-    if len(sorted_filenames) != len(sorted_filenames_second):
+    if frame_folder_second is not None and len(sorted_filenames) != len(sorted_filenames_second):
         raise ValueError("The number of images in both folders must be the same")
 
     # Read the first pair of images to determine final video size
     first_image_top = cv2.imread(os.path.join(frame_folder, sorted_filenames[0]))
-    first_image_bottom = cv2.imread(os.path.join(frame_folder_second, sorted_filenames_second[0]))
+    if frame_folder_second is not None:
+        first_image_bottom = cv2.imread(os.path.join(frame_folder_second, sorted_filenames_second[0]))
+    else:
+        first_image_bottom = None
 
     # Assuming you have a function crop_to_aspect_ratio that crops images to the given size
     top_cropped = crop_to_aspect_ratio(first_image_top, size)
-    bottom_cropped = crop_to_aspect_ratio(first_image_bottom, size)
+    if frame_folder_second is not None:
+        bottom_cropped = crop_to_aspect_ratio(first_image_bottom, size)
+    else:
+        bottom_cropped = None
 
     # Check if sizes match
     if top_cropped.shape[1] != size[0] or top_cropped.shape[0] != size[1]:
         raise ValueError(f"Top image size after cropping does not match the desired {size}")
-    if bottom_cropped.shape[1] != size[0] or bottom_cropped.shape[0] != size[1]:
+    if bottom_cropped is not None and (bottom_cropped.shape[1] != size[0] or bottom_cropped.shape[0] != size[1]):
         raise ValueError(f"Bottom image size after cropping does not match the desired {size}")
 
     # Define the final size to stack one image under the other
-    final_size = (size[0], size[1]*2)  # same width, double height
+    if frame_folder_second is not None:
+        final_size = (size[0], size[1]*2)  # same width, double height
+    else:
+        final_size = size
 
     # Create VideoWriter object
     out = cv2.VideoWriter(os.path.join(out_folder, "quiz_no_audio.mp4"), video_codec, frame_rate, final_size)
 
-    for fname_top, fname_bottom in zip(sorted_filenames, sorted_filenames_second):
+    for idx in range(len(sorted_filenames)):
         # Read and preprocess top image
-        frame_top = cv2.imread(os.path.join(frame_folder, fname_top))
+        frame_top = cv2.imread(os.path.join(frame_folder, sorted_filenames[idx]))
         frame_top = crop_to_aspect_ratio(frame_top, size)
         if frame_top.shape[1] != size[0] or frame_top.shape[0] != size[1]:
-            raise ValueError(f"Image size for {fname_top} does not match the set image size")
+            raise ValueError(f"Image size for {sorted_filenames[idx]} does not match the set image size")
 
         # Read and preprocess bottom image
-        frame_bottom = cv2.imread(os.path.join(frame_folder_second, fname_bottom))
-        frame_bottom = crop_to_aspect_ratio(frame_bottom, size)
-        if frame_bottom.shape[1] != size[0] or frame_bottom.shape[0] != size[1]:
-            raise ValueError(f"Image size for {fname_bottom} does not match the set image size")
+        if frame_folder_second is not None:
+            frame_bottom = cv2.imread(os.path.join(frame_folder_second, sorted_filenames_second[idx]))
+            frame_bottom = crop_to_aspect_ratio(frame_bottom, size)
+            if frame_bottom.shape[1] != size[0] or frame_bottom.shape[0] != size[1]:
+                raise ValueError(f"Image size for {sorted_filenames_second[idx]} does not match the set image size")
 
         # Stack images vertically
-        combined_frame = np.vstack((frame_top, frame_bottom))
+        if frame_folder_second is not None:
+            combined_frame = np.vstack((frame_top, frame_bottom))
+        else:
+            combined_frame = frame_top
         
         # Write combined frame to video
         out.write(combined_frame)

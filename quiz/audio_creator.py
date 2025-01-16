@@ -180,7 +180,7 @@ def create_audio(city_quiz, use_elevenlabs=False, elevenlabs_api_key=''):
         introduction=city_quiz.introduction
     )
     
-    host_voice = "2ovNLFOsfyKPEWV5kqQi"
+    host_voice = "X2j354mOfDROQk9ghjz4"
     
     for round in range(city_quiz_with_audio.get_nr_rounds()):
         print(f"Generating audio for round {round}")
